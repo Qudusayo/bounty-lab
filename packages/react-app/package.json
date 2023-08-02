@@ -10,8 +10,12 @@
     },
     "dependencies": {
         "@celo/rainbowkit-celo": "^1.0.1",
+        "@emotion/react": "^11.11.1",
+        "@emotion/styled": "^11.11.0",
+        "@fontsource/inter": "^5.0.6",
         "@headlessui/react": "^1.7.14",
         "@heroicons/react": "^2.0.18",
+        "@mui/joy": "^5.0.0-beta.0",
         "@rainbow-me/rainbowkit": "^1.0.2",
         "ethers": "^5.7.2",
         "next": "^13.4.2",
