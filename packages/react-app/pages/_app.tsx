@@ -11,41 +11,41 @@ import { Alfajores, Celo } from "@celo/rainbowkit-celo/chains";
 const projectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID as string; // get one at https://cloud.walletconnect.com/app
 
 const { chains, publicClient } = configureChains(
-    [Celo, Alfajores],
-    [publicProvider()]
+  [Celo, Alfajores],
+  [publicProvider()]
 );
 
 const connectors = celoGroups({
-    chains,
-    projectId,
-    appName:
-        (typeof document === "object" && document.title) || "Your App Name",
+  chains,
+  projectId,
+  appName: (typeof document === "object" && document.title) || "Your App Name",
 });
 
 const appInfo = {
-    appName: "Celo Composer",
+  appName: "Celo Composer",
 };
 
 const wagmiConfig = createConfig({
-    autoConnect: true,
-    connectors,
-    publicClient: publicClient,
+  autoConnect: true,
+  connectors,
+  publicClient: publicClient,
 });
 
 function App({ Component, pageProps }: AppProps) {
-    return (
-        <WagmiConfig config={wagmiConfig}>
-            <RainbowKitProvider
-                chains={chains}
-                appInfo={appInfo}
-                coolMode={true}
-            >
-                <Layout>
-                    <Component {...pageProps} />
-                </Layout>
-            </RainbowKitProvider>
-        </WagmiConfig>
-    );
+  return (
+    <WagmiConfig config={wagmiConfig}>
+      <RainbowKitProvider
+        chains={chains}
+        appInfo={appInfo}
+        coolMode={true}
+        modalSize="compact"
+      >
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </RainbowKitProvider>
+    </WagmiConfig>
+  );
 }
 
 export default App;
