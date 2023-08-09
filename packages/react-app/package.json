@@ -18,14 +18,21 @@
         "@mui/joy": "^5.0.0-beta.0",
         "@mui/lab": "^5.0.0-alpha.138",
         "@mui/material": "^5.14.3",
+        "@mui/x-date-pickers": "^6.11.0",
         "@rainbow-me/rainbowkit": "^1.0.2",
+        "dayjs": "^1.11.9",
         "ethers": "^5.7.2",
+        "formik": "^2.4.3",
         "next": "^13.4.2",
+        "nprogress": "^0.2.0",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-icons": "^4.10.1",
+        "react-markdown": "^8.0.7",
+        "remark-gfm": "^3.0.1",
         "viem": "^0.3.30",
-        "wagmi": "^1.2"
+        "wagmi": "^1.2",
+        "yup": "^1.2.0"
     },
     "devDependencies": {
         "@types/node": "^20.2.1",
