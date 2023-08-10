@@ -1,5 +1,6 @@
 require("dotenv").config({ path: ".env" });
 require("hardhat-deploy");
+require('solidity-coverage');
 const { task } = require("hardhat/config");
 require("hardhat-celo");
 
