@@ -1,15 +1,10 @@
 import { Container } from "@/components/Utils";
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Link as MuiLink,
-  Typography,
-} from "@mui/joy";
-import React from "react";
+import { Box, Button, Chip, Link as MuiLink, Typography } from "@mui/joy";
+import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+//@ts-ignore
+import WeaveDB from "weavedb-sdk-node";
 import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -17,63 +12,28 @@ import TabPanel from "@mui/lab/TabPanel";
 import { GoPeople, GoLock } from "react-icons/go";
 import { HiOutlineBookOpen } from "react-icons/hi";
 import { BsDot } from "react-icons/bs";
-import { FiUserPlus } from "react-icons/fi";
 import { LuClock4 } from "react-icons/lu";
 import { ChipData } from "@/components/BountyCard";
 import { TbBrandStackshare } from "react-icons/tb";
 import ApplyBounty from "@/components/ApplyBounty";
 import Link from "next/link";
 import { IoArrowBack } from "react-icons/io5";
+import type { InferGetServerSidePropsType, GetServerSideProps } from "next";
+import { Bounty as IBounty } from "@/types";
+import axios from "axios";
+import { formatTimestamp, shortenAddress } from "@/functions";
+import Avatar from "@/utils/Avatar";
+import { useColorScheme as useJoyColorScheme } from "@mui/joy/styles";
 
-const markdown = `# 1.1 Objective
-The primary goal is to develop a Minimum Viable Product (MVP) in the form of a web service for a highly personalized financial management assistant aimed at young professionals entering the workforce.
-
-# 1.2 Target Audience
-Young professionals
-Individuals interested in personalized financial management
-
-# 2. Functional Requirements
-2.1 User Interface (UI)
-Interactive Chat Interface: A conversational UI that allows users to interact with the AI bot.
-Dashboard: A visual representation of the user's financial status, goals, and progress.
-Navigation Menu: Easy navigation to different sections like budgeting, investments, savings, etc.
-2.2 AI Chatbot Features
-Financial Analysis:
-Income and Expense Tracking
-Debt Management
-Investment Analysis
-Personalized Financial Goals Setting:
-Short-term and Long-term Goals
-Customizable Budget Plans
-Notifications and Reminders
-Financial Tips and Advice:
-Personalized Recommendations
-Integration with Financial News and Trends
-Educational Content and Tutorials
-FAQ and Automated Responses:
-Predefined Answers to Common Questions
-Natural Language Processing for User Queries
-
-# 3. Technical Stack
-3.1 Frontend
-Language: JavaScript
-Framework: React.js
-Libraries: Redux, Axios
-3.2 Backend
-Language: Python
-Framework: Django
-Database: PostgreSQL
-AI Engine: TensorFlow, PyTorch
-3.3 Infrastructure
-Cloud Service: AWS
-Version Control: Git
-CI/CD: Jenkins`;
-
-export default function Bounty() {
+export default function Bounty({
+  bounty,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [value, setValue] = React.useState("1");
   const [status, setStatus] = React.useState<
     "open" | "in-progress" | "completed" | "cancelled"
   >("open");
+  const { mode } = useJoyColorScheme();
+  const [common, setCommon] = useState("#ffffff");
 
   const handleChange = (_: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -83,6 +43,14 @@ export default function Bounty() {
     style: "currency",
     currency: "USD",
   });
+
+  useEffect(() => {
+    if (mode === "light") {
+      setCommon("#ffffff");
+    } else {
+      setCommon("neutral.900");
+    }
+  }, [mode]);
 
   return (
     <Container>
@@ -95,13 +63,13 @@ export default function Bounty() {
         py={0.5}
         px={1}
         borderRadius={5}
-        bgcolor={"white"}
+        bgcolor={common}
         mb={4}
         startDecorator={<IoArrowBack />}
         sx={{
           transition: "all .2s ease-in-out",
           "&:hover": {
-            bgcolor: "neutral.100",
+            bgcolor: mode === "light" ? "neutral.100" : "neutral.800",
           },
         }}
       >
@@ -122,7 +90,7 @@ export default function Bounty() {
           flexDirection={["column", "column", "row"]}
         >
           <Typography level="h2" color="success">
-            Earn {format(1000)}
+            Earn {format(bounty.reward)}
           </Typography>
           <Box
             sx={{
@@ -132,15 +100,17 @@ export default function Bounty() {
             }}
           >
             <LuClock4 />
-            <Typography level="body-sm">due in 15 days</Typography>
+            <Typography level="body-sm">
+              due {formatTimestamp(bounty.deadline)}
+            </Typography>
             <BsDot size={20} />
-            <Chip size="sm" color={ChipData[status].color as any}>
-              {ChipData[status].status}
+            <Chip size="sm" color={ChipData[bounty.status].color as any}>
+              {ChipData[bounty.status].status}
             </Chip>
           </Box>
         </Box>
         <Typography level="h3" my={".75em"}>
-          Create an Expo config plugin for react-native-line
+          {bounty.title}
         </Typography>
         <Box
           display={"flex"}
@@ -151,19 +121,19 @@ export default function Bounty() {
           gap={2}
         >
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-            <Avatar color="primary" variant="solid" size="sm" />
-            <Typography level="body-sm">Qudusayo</Typography>
+            <Avatar address={bounty.issuer} />
+            <Typography level="body-sm">
+              {shortenAddress(bounty.issuer)}
+            </Typography>
             <BsDot size={20} />
-            <Typography level="body-sm">Posted 26 minutes ago</Typography>
+            <Typography level="body-sm">
+              Posted {formatTimestamp(bounty.createdAt)}
+            </Typography>
           </Box>
           {status === "in-progress" || status === "completed" ? (
             <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
               <Typography level="body-sm">Claimed by</Typography>
-              <Avatar
-                color={ChipData[status].color as any}
-                variant="solid"
-                size="sm"
-              />
+              <Avatar address={bounty.hunter ?? "0x000000"} />
               <Typography level="body-sm">Qudusayo</Typography>
             </Box>
           ) : (
@@ -182,7 +152,7 @@ export default function Bounty() {
           )}
         </Box>
       </Box>
-      <Box sx={{ width: "100%", typography: "body1" }}>
+      <Box sx={{ width: "100%", typography: "body1", mb: 4 }}>
         <TabContext value={value}>
           <Box
             sx={{
@@ -251,7 +221,7 @@ export default function Bounty() {
                     <Chip
                       size="sm"
                       sx={{
-                        backgroundColor: "#ffffff",
+                        backgroundColor: common,
                       }}
                     >
                       0
@@ -289,9 +259,9 @@ export default function Bounty() {
             <Typography level="h4" my={3}>
               Bounty Description
             </Typography>
-            <Box px={3} py={1} borderRadius={12} bgcolor={"#ffffff"}>
+            <Box px={3} py={1} borderRadius={12} bgcolor={common}>
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {markdown.replace(/^(.*)$/gm, "$1  ")}
+                {bounty.description.replace(/^(.*)$/gm, "$1  ")}
               </ReactMarkdown>
             </Box>
           </TabPanel>
@@ -306,7 +276,7 @@ export default function Bounty() {
             </Typography>
             <Box
               sx={{
-                backgroundColor: "#ffffff",
+                backgroundColor: common,
                 p: 3,
                 borderRadius: 6,
               }}
@@ -327,3 +297,51 @@ export default function Bounty() {
     </Container>
   );
 }
+
+interface BountyProps extends IBounty {
+  description: string;
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  bounty: BountyProps;
+}> = async (context) => {
+  const res = context.res;
+  const { id } = context.query;
+
+  const db = new WeaveDB({
+    contractTxId: process.env.NEXT_PUBLIC_WEAVEDB_ContractTxId,
+  });
+  await db.init();
+  let bounties: Promise<IBounty[]> = await db.get("bounties", [
+    "txId",
+    "==",
+    id,
+  ]);
+  if (!(await bounties).length) {
+    return {
+      redirect: {
+        destination: "/404",
+        permanent: false,
+      },
+    };
+  }
+
+  let bounty = (await bounties)[0];
+  const description = await axios.get(
+    `https://ipfs.io/ipfs/${bounty.descriptionIPFSHash}`
+  );
+
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=10, stale-while-revalidate=59"
+  );
+
+  return {
+    props: {
+      bounty: {
+        ...bounty,
+        description: description.data,
+      },
+    },
+  };
+};

@@ -11,6 +11,7 @@ import { MuiButton } from "./Utils";
 import { BsPlusLg } from "react-icons/bs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import he from "he";
 import {
   Divider,
   Grid,
@@ -23,12 +24,18 @@ import { selectClasses } from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import { SlArrowDown } from "react-icons/sl";
 import { Formik } from "formik";
+import { marked } from "marked";
+import { v4 } from "uuid";
 import { CreateBountyValidationSchema } from "@/validations/createBounty";
+import { useAppContext } from "@/context/AppContext";
+import { handleUpload } from "@/functions";
 
 const threeDaysTime = dayjs().add(3, "day");
 
 export default function CreateBounty() {
   const [open, setOpen] = React.useState<boolean>(false);
+  const { address, createBounty } = useAppContext();
+
   return (
     <React.Fragment>
       <MuiButton
@@ -74,9 +81,41 @@ export default function CreateBounty() {
                 },
               }}
               validationSchema={CreateBountyValidationSchema}
-              onSubmit={(values, { setSubmitting }) => {
-                console.log(JSON.stringify(values, null, 2));
+              onSubmit={async (values, { setSubmitting, resetForm }) => {
+                setSubmitting(true);
+                const parsedHtml = marked(values.description);
+                const decodedText = he.decode(parsedHtml);
+                const plainText = decodedText
+                  .replace(/<[^>]*>/g, "")
+                  .replace(/\n/g, " ");
+
+                if (address) {
+                  let ipfsHash = await handleUpload(
+                    values.description.toString()
+                  );
+
+                  await createBounty({
+                    title: values.title,
+                    descriptionMeta: plainText.slice(0, 200),
+                    descriptionIPFSHash: ipfsHash.toString(),
+                    communication: {
+                      method: values.communicationMethod.type,
+                      value: values.communicationMethod.value,
+                    },
+                    createdAt: new Date().getTime(),
+                    reward: values.amount,
+                    deadline: new Date(
+                      values.targetCompletionDate as unknown as number
+                    ).getTime(),
+                    hunter: null,
+                    issuer: address,
+                    status: "open",
+                    txId: v4(),
+                  });
+                }
                 setSubmitting(false);
+                setOpen(false);
+                resetForm();
               }}
             >
               {({
@@ -296,7 +335,13 @@ export default function CreateBounty() {
                       completion.
                     </Typography>
 
-                    <Button type="submit">Submit</Button>
+                    <Button
+                      type="submit"
+                      loading={isSubmitting}
+                      disabled={isSubmitting}
+                    >
+                      Submit
+                    </Button>
                   </Stack>
                 </form>
               )}

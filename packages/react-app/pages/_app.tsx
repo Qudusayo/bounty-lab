@@ -16,10 +16,19 @@ import { CssVarsProvider as JoyCssVarsProvider } from "@mui/joy/styles";
 import { CssBaseline } from "@mui/joy";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { AppProvider } from "@/context/AppContext";
+import joyTheme from "@/theme/joytheme";
+import Router from "next/router";
+import NProgress from "nprogress";
+
+// Router Events
+Router.events.on("routeChangeStart", () => NProgress.start());
+Router.events.on("routeChangeComplete", () => NProgress.done());
+Router.events.on("routeChangeError", () => NProgress.done());
 
 const materialTheme = materialExtendTheme();
 
-const projectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID as string; // get one at https://cloud.walletconnect.com/app
+const projectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID as string;
 
 const { chains, publicClient } = configureChains(
   [Celo, Alfajores],
@@ -51,16 +60,20 @@ function App({ Component, pageProps }: AppProps) {
         coolMode={true}
         modalSize="compact"
       >
-        <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: materialTheme }}>
-          <JoyCssVarsProvider defaultMode="dark">
-            <CssBaseline />
-            <Layout>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Component {...pageProps} />
-              </LocalizationProvider>
-            </Layout>
-          </JoyCssVarsProvider>
-        </MaterialCssVarsProvider>
+        <AppProvider>
+          <MaterialCssVarsProvider
+            theme={{ [MATERIAL_THEME_ID]: materialTheme }}
+          >
+            <JoyCssVarsProvider defaultMode="dark" theme={joyTheme}>
+              <CssBaseline />
+              <Layout>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <Component {...pageProps} />
+                </LocalizationProvider>
+              </Layout>
+            </JoyCssVarsProvider>
+          </MaterialCssVarsProvider>
+        </AppProvider>
       </RainbowKitProvider>
     </WagmiConfig>
   );

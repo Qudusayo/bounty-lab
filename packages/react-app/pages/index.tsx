@@ -14,9 +14,11 @@ import Select, { selectClasses } from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import { Input } from "@mui/joy";
 import CreateBounty from "@/components/CreateBounty";
+import { useAppContext } from "@/context/AppContext";
 
 export default function Bounties() {
   const [value, setValue] = React.useState("1");
+  const { bounties } = useAppContext();
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -211,38 +213,10 @@ export default function Bounties() {
               p: 0,
             }}
           >
-            <BountyCard
-              id="1"
-              status="open"
-              price={45}
-              applicants={0}
-              title="Create an Expo config plugin for react-native-line"
-              description="I need help creating an expo config plugin for this repo: https://github.com/xmartlabs/react-native-line Technical Details To test after this expo config plugin is installed and expo prebuild."
-            />
-            <BountyCard
-              id="2"
-              status="in-progress"
-              price={1800}
-              applicants={1}
-              title="Entendre GPT Integration Phase 1B"
-              description="Bulk create, edit, delete objects Configure assets, and tags objects"
-            />
-            <BountyCard
-              id="3"
-              status="cancelled"
-              price={486}
-              applicants={0}
-              title="LLM Chat Interface"
-              description="Looking for someone to build a unique AI Chat Interface. Must be able to work with an Python Backend, auth"
-            />
-            <BountyCard
-              id="4"
-              status="completed"
-              price={2520}
-              applicants={1}
-              title="Use Codex/GPT-3 to fine-tune a chat workflow that generates template Python code for authenticating with web3 API (JWT and Biscuits)"
-              description="I need an expert with OpenAI APIs to build new workflows in GPT-3 or Codex that allow OpenAI to generate boilerplate/template python code for an end user based on a chat conversation. The end-user will ask to begin writing queries against a new web3 database, and the chatbot will need to generate python to:"
-            />
+            {bounties &&
+              bounties.map((bounty, index) => (
+                <BountyCard key={bounty.txId} {...bounty} />
+              ))}
           </TabPanel>
           <TabPanel
             sx={{
