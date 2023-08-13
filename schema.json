@@ -1,0 +1,88 @@
+{
+  "properties": {
+    "applications": {
+      "items": {
+        "properties": {
+          "applicationMessage": {
+            "type": "string"
+          },
+          "hunter": {
+            "pattern": "^0x[0-9a-fA-F]+$",
+            "type": "string"
+          },
+          "status": {
+            "enum": ["open", "accepted", "rejected"],
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "number"
+          }
+        },
+        "required": ["hunter", "status", "timestamp", "applicationMessage"],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "communication": {
+      "properties": {
+        "method": {
+          "enum": ["email", "discord"],
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["method", "value"],
+      "type": "object"
+    },
+    "createdAt": {
+      "type": "number"
+    },
+    "deadline": {
+      "type": "number"
+    },
+    "descriptionIPFSHash": {
+      "type": "string"
+    },
+    "descriptionMeta": {
+      "type": "string"
+    },
+    "hunter": {
+      "type": ["string", "null"]
+    },
+    "issuer": {
+      "type": "string"
+    },
+    "reward": {
+      "type": "number"
+    },
+    "status": {
+      "enum": ["open", "in progress", "completed", "cancelled"],
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "txId": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "communication",
+    "createdAt",
+    "deadline",
+    "descriptionMeta",
+    "descriptionIPFSHash",
+    "hunter",
+    "issuer",
+    "reward",
+    "status",
+    "title",
+    "txId"
+  ],
+  "type": "object"
+}

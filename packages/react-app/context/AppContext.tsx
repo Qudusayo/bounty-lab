@@ -136,6 +136,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const getBountyApplicants = async (id: string) => {};
+
   const appContextValue: IBountyContextProps = {
     address,
     bounties,

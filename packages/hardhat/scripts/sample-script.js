@@ -1,10 +1,9 @@
+require("dotenv").config({ path: ".env" });
 const hre = require("hardhat");
 
 async function main() {
   const Bounty = await hre.ethers.getContractFactory("Bounty");
-  const bounty = await Bounty.deploy(
-    "0x8df6149871aBd91fb04b6D5254F274c9b723090F"
-  );
+  const bounty = await Bounty.deploy(process.env.TOKEN_ADDRESS);
   await bounty.deployed();
 
   console.log("Bounty deployed to:", bounty.address);

@@ -1,5 +1,12 @@
 import { Container } from "@/components/Utils";
-import { Box, Button, Chip, Link as MuiLink, Typography } from "@mui/joy";
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Link as MuiLink,
+  Typography,
+} from "@mui/joy";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -28,6 +35,9 @@ import { useColorScheme as useJoyColorScheme } from "@mui/joy/styles";
 export default function Bounty({
   bounty,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const [bountyDescription, setBountyDescription] = useState<string | null>(
+    null
+  );
   const [value, setValue] = React.useState("1");
   const [status, setStatus] = React.useState<
     "open" | "in-progress" | "completed" | "cancelled"
@@ -51,6 +61,16 @@ export default function Bounty({
       setCommon("neutral.900");
     }
   }, [mode]);
+
+  useEffect(() => {
+    const fetchBountyDescription = async () => {
+      const { data } = await axios.get(
+        `https://ipfs.io/ipfs/${bounty.descriptionIPFSHash}`
+      );
+      setBountyDescription(data);
+    };
+    fetchBountyDescription();
+  });
 
   return (
     <Container>
@@ -259,11 +279,24 @@ export default function Bounty({
             <Typography level="h4" my={3}>
               Bounty Description
             </Typography>
-            <Box px={3} py={1} borderRadius={12} bgcolor={common}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {bounty.description.replace(/^(.*)$/gm, "$1  ")}
-              </ReactMarkdown>
-            </Box>
+            {bountyDescription ? (
+              <Box px={3} py={1} borderRadius={12} bgcolor={common}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {bountyDescription.replace(/^(.*)$/gm, "$1  ")}
+                </ReactMarkdown>
+              </Box>
+            ) : (
+              <CircularProgress
+                color="neutral"
+                sx={{
+                  display: "block",
+                  margin: "auto",
+                  "--CircularProgress-size": "40px",
+                  "--CircularProgress-trackThickness": "3px",
+                  "--CircularProgress-progressThickness": "3px",
+                }}
+              />
+            )}
           </TabPanel>
           <TabPanel
             value="2"
@@ -298,14 +331,9 @@ export default function Bounty({
   );
 }
 
-interface BountyProps extends IBounty {
-  description: string;
-}
-
 export const getServerSideProps: GetServerSideProps<{
-  bounty: BountyProps;
+  bounty: IBounty;
 }> = async (context) => {
-  const res = context.res;
   const { id } = context.query;
 
   const db = new WeaveDB({
@@ -327,21 +355,6 @@ export const getServerSideProps: GetServerSideProps<{
   }
 
   let bounty = (await bounties)[0];
-  const description = await axios.get(
-    `https://ipfs.io/ipfs/${bounty.descriptionIPFSHash}`
-  );
 
-  res.setHeader(
-    "Cache-Control",
-    "public, s-maxage=10, stale-while-revalidate=59"
-  );
-
-  return {
-    props: {
-      bounty: {
-        ...bounty,
-        description: description.data,
-      },
-    },
-  };
+  return { props: { bounty } };
 };
