@@ -42,10 +42,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (dbInstance && address) {
+    if (dbInstance) {
       fetchBounties();
     }
-  }, [dbInstance, address]);
+  }, [dbInstance]);
 
   useEffect(() => {
     async function createVirtualUser() {
