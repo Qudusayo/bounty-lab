@@ -1,38 +1,44 @@
 {
-    "name": "bounty-lab",
-    "version": "1.0.0",
-    "description": "Custom Celo Composer project.",
-    "private": true,
-    "author": "Celo",
-    "license": "MIT",
-    "scripts": {
-        "react-app:dev": "yarn workspace @bounty-lab/react-app dev",
-        "react-app:build": "yarn workspace @bounty-lab/react-app build",
-        "react-app:start": "yarn workspace @bounty-lab/react-app start",
-        "react-app:lint": "yarn workspace @bounty-lab/react-app lint",
-        "hardhat:test": "yarn workspace @bounty-lab/hardhat test",
-        "hardhat:test-local": "yarn workspace @bounty-lab/hardhat test-local",
-        "hardhat:create-account": "yarn workspace @bounty-lab/hardhat create-account",
-        "hardhat:accounts": "yarn workspace @bounty-lab/hardhat accounts",
-        "hardhat:devchain": "yarn workspace @bounty-lab/hardhat devchain",
-        "hardhat:deploy": "yarn workspace @bounty-lab/hardhat deploy",
-        "hardhat:deploy-reset-watch": "yarn workspace @bounty-lab/hardhat deploy-reset-watch",
-        "hardhat:watch": "yarn workspace @bounty-lab/hardhat watch",
-        "hardhat:fork-mainnet": "yarn workspace @bounty-lab/hardhat fork-mainnet"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/celo-org/celo-composer.git"
-    },
-    "bugs": {
-        "url": "https://github.com/celo-org/celo-composer/issues"
-    },
-    "homepage": "https://github.com/celo-org/celo-composer/blob/main/README.md",
-    "workspaces": [
-        "packages/*"
-    ],
-    "keywords": [
-        "celo-composer",
-        "celo"
-    ]
+  "name": "bounty-lab",
+  "version": "1.0.0",
+  "description": "Custom Celo Composer project.",
+  "private": true,
+  "author": "Celo",
+  "license": "MIT",
+  "scripts": {
+    "client:dev": "yarn workspace @bounty-lab/client dev",
+    "client:build": "yarn workspace @bounty-lab/client build",
+    "client:start": "yarn workspace @bounty-lab/client start",
+    "client:lint": "yarn workspace @bounty-lab/client lint",
+    "server:dev": "yarn workspace @bounty-lab/server dev",
+    "server:start": "yarn workspace @bounty-lab/server start",
+    "hardhat:test": "yarn workspace @bounty-lab/hardhat test",
+    "hardhat:test-local": "yarn workspace @bounty-lab/hardhat test-local",
+    "hardhat:create-account": "yarn workspace @bounty-lab/hardhat create-account",
+    "hardhat:accounts": "yarn workspace @bounty-lab/hardhat accounts",
+    "hardhat:devchain": "yarn workspace @bounty-lab/hardhat devchain",
+    "hardhat:deploy": "yarn workspace @bounty-lab/hardhat deploy",
+    "hardhat:deploy-reset-watch": "yarn workspace @bounty-lab/hardhat deploy-reset-watch",
+    "hardhat:watch": "yarn workspace @bounty-lab/hardhat watch",
+    "hardhat:fork-mainnet": "yarn workspace @bounty-lab/hardhat fork-mainnet",
+    "dev": "concurrently --kill-others-on-fail \"yarn server:dev\"  \"yarn client:dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/celo-org/celo-composer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/celo-org/celo-composer/issues"
+  },
+  "homepage": "https://github.com/celo-org/celo-composer/blob/main/README.md",
+  "workspaces": [
+    "packages/*"
+  ],
+  "keywords": [
+    "celo-composer",
+    "celo"
+  ],
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  }
 }
