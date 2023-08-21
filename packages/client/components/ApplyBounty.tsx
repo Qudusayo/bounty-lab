@@ -133,7 +133,14 @@ export default function ApplyBounty(bounty: ApplyBountyProps) {
                         Complete bounty to earn{" "}
                       </Typography>
                       <Typography color="success" display={"inline"}>
-                        {format(reward)}
+                        ${reward}{" "}
+                      </Typography>
+                      <Typography
+                        display={"inline"}
+                        level="body-sm"
+                        fontWeight={"bold"}
+                      >
+                        10% Fee ${(0.1 * reward).toFixed(2)} Charged
                       </Typography>
                     </Box>
                     <FormControl>

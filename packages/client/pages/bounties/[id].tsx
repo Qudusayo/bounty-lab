@@ -48,6 +48,7 @@ import AcceptSubmission from "@/components/AcceptBounty";
 import AbandonBounty from "@/components/AbandonBounty";
 import CancelBounty from "@/components/CancelBounty";
 import RequestChages from "@/components/RequestChanges";
+import ShareModal from "@/components/ShareModal";
 
 export default function Bounty({
   bounty: _bounty,
@@ -184,9 +185,7 @@ export default function Bounty({
             </Typography>
           </Box>
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-            <Button sx={{ p: 1.25 }} color="neutral">
-              <TbBrandStackshare size={20} />
-            </Button>
+            <ShareModal title={bounty.title} reward={bounty.reward} />
             {isHunter && (
               <AbandonBounty
                 refetchBounty={refetchBounty}
@@ -217,7 +216,7 @@ export default function Bounty({
               />
             ) : (
               isHunter &&
-              isCompletedBounty && (
+              !isCompletedBounty && (
                 <SubmitWork refetchBounty={refetchBounty} bountyId={bountyId} />
               )
             )}
@@ -481,44 +480,49 @@ export default function Bounty({
                   )}
               </Box>
             )}
-            {bounty.submissionStatus === "reviewed" && (
-              <Box
-                sx={{
-                  backgroundColor: common,
-                  p: 3,
-                  borderRadius: 6,
-                  mb: 2,
-                  border:
-                    bounty.submissionStatus === "reviewed"
-                      ? "1px solid #a19600"
-                      : "",
-                  boxShadow:
-                    bounty.submissionStatus === "reviewed"
-                      ? "rgba(161, 118, 0, 0.4) 0px 0px 8px"
-                      : "",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography fontWeight={"600"}>
-                    {isCreator ? "You" : shortenAddress(bounty.hunter ?? "")}{" "}
-                    request some changes!
-                  </Typography>
-                  {!isCreator && (
-                    <SubmitWork
-                      refetchBounty={refetchBounty}
-                      bountyId={bountyId}
-                    />
-                  )}
-                </Box>
-                <Typography>{bounty.submissionFeedback}</Typography>
-              </Box>
-            )}
+            {bounty.submissionStatus === "reviewed" ||
+              (!bounty.submissionStatus &&
+                isHunter &&
+                bounty.status !== "completed" && (
+                  <Box
+                    sx={{
+                      backgroundColor: common,
+                      p: 3,
+                      borderRadius: 6,
+                      mb: 2,
+                      border:
+                        bounty.submissionStatus === "reviewed"
+                          ? "1px solid #a19600"
+                          : "",
+                      boxShadow:
+                        bounty.submissionStatus === "reviewed"
+                          ? "rgba(161, 118, 0, 0.4) 0px 0px 8px"
+                          : "",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Typography fontWeight={"600"}>
+                        {isCreator
+                          ? "You"
+                          : shortenAddress(bounty.hunter ?? "")}{" "}
+                        request some changes!
+                      </Typography>
+                      {!isCreator && (
+                        <SubmitWork
+                          refetchBounty={refetchBounty}
+                          bountyId={bountyId}
+                        />
+                      )}
+                    </Box>
+                    <Typography>{bounty.submissionFeedback}</Typography>
+                  </Box>
+                ))}
             <Grid container spacing={2} sx={{ flexGrow: 1 }}>
               <Grid xs={6}>
                 <Box

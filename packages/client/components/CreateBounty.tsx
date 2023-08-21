@@ -74,7 +74,7 @@ export default function CreateBounty() {
 
 # Timelines / Milestones
 `,
-                amount: 1500,
+                amount: 15,
                 communicationMethod: {
                   type: "email" as "email" | "discord",
                   value: "",
@@ -94,7 +94,7 @@ export default function CreateBounty() {
                     values.description.toString()
                   );
 
-                  await createBounty({
+                  let createBountyReq = await createBounty({
                     title: values.title,
                     descriptionMeta: plainText.slice(0, 200),
                     descriptionIPFSHash: ipfsHash.toString(),
@@ -112,10 +112,13 @@ export default function CreateBounty() {
                     status: "open",
                     txId: v4(),
                   });
+
+                  if (createBountyReq) {
+                    resetForm();
+                    setOpen(false);
+                  }
                 }
                 setSubmitting(false);
-                setOpen(false);
-                resetForm();
               }}
             >
               {({

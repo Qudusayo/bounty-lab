@@ -82,7 +82,7 @@ export default function Bounties() {
           </Typography>
           <Typography variant="h6">
             {value === "1" &&
-              "Work with top bounty hunters to bring your ideas to life."}
+              "Work with top problem solvers to bring your ideas to life."}
             {value === "2" && "View Bounties that you have posted."}
             {value === "3" && "View Bounties that you have applied for."}
           </Typography>

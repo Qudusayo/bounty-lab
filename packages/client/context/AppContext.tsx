@@ -55,7 +55,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     useState<StatusSortKey[keyof StatusSortKey]>("");
   const [orderSort, setOrderSort] =
     useState<OrderSortKey[keyof OrderSortKey]>("createdAt");
-  const { approveAndSubmitTx, acceptBountyTx } = useContract();
+  const { approveAndSubmitTx, acceptBountyTx, cancelBountyTx } = useContract();
 
   useEffect(() => {
     const init = async () => {
@@ -161,7 +161,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       if (bounty.status === "completed") return;
       if (!bounty.hunter) return;
 
-      await acceptBountyTx(bounty.txId, bounty.hunter);
+      let acceptBountyTxReq = await acceptBountyTx(bounty.txId, bounty.hunter);
+      if (!acceptBountyTxReq) return;
 
       await dbInstance!.update<Bounty>(
         { ...bounty, status: "completed" },
@@ -197,6 +198,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           ...bounty,
           applications,
           status: "open",
+          submissionFeedback: "",
+          submissionLink: "",
           hunter: "" as `0x${string}`,
         },
         "bounties",
@@ -216,6 +219,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       if (bounty.issuer !== address) return;
       if (bounty.status === "completed" || bounty.status === "in progress")
         return;
+
+      let cancelBountyReqTx = await cancelBountyTx(bounty.txId);
+      if (!cancelBountyReqTx) return;
 
       let cancelBountyReq = await dbInstance!.update<Bounty>(
         {
@@ -288,13 +294,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     let txId = v4();
     try {
       let bountyDataWithTxId = { ...bountyData, txId };
-      await approveAndSubmitTx(txId, bountyData.reward);
+      let deposit = await approveAndSubmitTx(txId, bountyData.reward);
+      if (!deposit) return false;
 
       const bounty = await dbInstance!.add(bountyDataWithTxId, "bounties");
       if (bounty.success) {
         console.log("Bounty created!");
         fetchBounties();
       }
+      return bounty.success;
     } catch (error) {
       return error;
     }
@@ -309,10 +317,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO:
-  const getBountyApplicants = async (id: string) => {};
-
-  // TODO:
   const requestChanges = async (id: string, message: string) => {
     try {
       let bounty = await dbInstance!.get<Bounty>("bounties", id);
