@@ -24,8 +24,9 @@
 
 <!-- ABOUT THE PROJECT -->
 ## Project Links
-[Live Demo](https://solvre.pro)  
-[Pitch](https://youtu.be/Od6cIsAQRSM)
+[https://solvre.pro](https://solvre.pro)    
+
+[Pitch Deck - Youtube](https://youtu.be/Od6cIsAQRSM)
 
 ## Pitch
 
