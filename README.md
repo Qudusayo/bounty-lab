@@ -12,7 +12,7 @@
         <li><a href="#traditional-task-delegation-inefficiencies">Problem Statement</a></li>
         <li><a href="#proposed-solution">Proposed Solution</a></li>
         <li><a href="#summary">Summary</a></li>
-        <li><a href="#key-takeaway">Key Takeaway</a></li>
+        <li><a href="#key-takeaway-and-what-next">Key Takeaway And What Next</a></li>
       </ul>
     </li>
     <li><a href="#what-does-it-do">How it works</a></li>
@@ -29,8 +29,7 @@
 [Pitch Deck - Youtube](https://youtu.be/Od6cIsAQRSM)
 
 ## Pitch
-
-
+https://github.com/Qudusayo/bounty-lab/assets/51055890/c718631d-fe2f-4904-88fd-699efbf83751
 
 ## Traditional Task Delegation Inefficiencies
 
