@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
-// Import the ERC20 token interface
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./IERC20.sol";
 
-contract Bounty {
+contract Solvre {
     address public owner; // Address of the platform owner
     IERC20 public token; // Address of the ERC20 token (e.g., USDT)
     uint256 public platformFeePercentage = 10; // 10% platform fee
@@ -12,11 +11,6 @@ contract Bounty {
 
     struct Bounty {
         address creator;
-        string title;
-        string descriptionMeta;
-        string descriptionIPFSHash;
-        uint256 creationDate;
-        uint256 targetCompletionDate;
         uint256 amount;
         bool isOpen;
         bool isCancelled;
@@ -24,16 +18,13 @@ contract Bounty {
         address acceptedSubmission;
     }
 
-    Bounty[] public bounties;
-    mapping(address => uint256[]) public creatorBounties;
+    mapping(string => Bounty) public bounties;
 
-    event BountyCreated(uint256 bountyId, address creator, uint256 amount);
-
-    event BountyCancelled(uint256 bountyId);
-
-    event SubmissionAccepted(
-        uint256 bountyId,
-        address submitter,
+    event BountyOpened(string bountyId, address creator, uint256 amount);
+    event BountyCancelled(string bountyId);
+    event BountyCompleted(
+        string bountyId,
+        address hunter,
         uint256 rewardAmount
     );
 
@@ -47,23 +38,22 @@ contract Bounty {
         _;
     }
 
-    modifier isValidBounty(uint256 bountyId) {
-        require(bountyId < bounties.length, "Invalid bounty ID");
-        require(!bounties[bountyId].isCancelled, "Bounty is already cancelled");
+    modifier isValidBounty(string memory _bountyId) {
+        require(
+            !bounties[_bountyId].isCancelled,
+            "Bounty is already cancelled"
+        );
         _;
     }
 
     // Create a new bounty
-    function createBounty(
-        string memory _title,
-        string memory _descriptionMeta,
-        string memory _descriptionIPFSHash,
-        uint256 _targetCompletionDate,
-        uint256 _amount
-    ) external payable {
+    function createBounty(string memory _bountyId, uint256 _amount)
+        external
+        payable
+    {
         require(
             _amount >= minimumBountyAmount,
-            "Bounty amount must be at least 1 USDT"
+            "Bounty amount must be at least 1 CUSD"
         );
 
         // Transfer the amount from the user to the contract
@@ -74,11 +64,6 @@ contract Bounty {
 
         Bounty memory newBounty = Bounty({
             creator: msg.sender,
-            title: _title,
-            descriptionMeta: _descriptionMeta,
-            descriptionIPFSHash: _descriptionIPFSHash,
-            creationDate: block.timestamp,
-            targetCompletionDate: _targetCompletionDate,
             amount: _amount,
             isOpen: true,
             isCancelled: false,
@@ -86,25 +71,18 @@ contract Bounty {
             acceptedSubmission: address(0)
         });
 
-        uint256 bountyId = bounties.length;
-        bounties.push(newBounty);
-        creatorBounties[msg.sender].push(bountyId);
+        bounties[_bountyId] = newBounty;
 
-        emit BountyCreated(bountyId, msg.sender, _amount);
+        emit BountyOpened(_bountyId, msg.sender, _amount);
     }
 
     // Get bounty details
-    function getBounty(uint256 bountyId)
+    function getBounty(string memory _bountyId)
         external
         view
-        isValidBounty(bountyId)
+        isValidBounty(_bountyId)
         returns (
             address creator,
-            string memory title,
-            string memory descriptionMeta,
-            string memory descriptionIPFSHash,
-            uint256 creationDate,
-            uint256 targetCompletionDate,
             uint256 amount,
             bool isOpen,
             bool isCancelled,
@@ -112,14 +90,9 @@ contract Bounty {
             address acceptedSubmission
         )
     {
-        Bounty storage bounty = bounties[bountyId];
+        Bounty storage bounty = bounties[_bountyId];
         return (
             bounty.creator,
-            bounty.title,
-            bounty.descriptionMeta,
-            bounty.descriptionIPFSHash,
-            bounty.creationDate,
-            bounty.targetCompletionDate,
             bounty.amount,
             bounty.isOpen,
             bounty.isCancelled,
@@ -128,30 +101,12 @@ contract Bounty {
         );
     }
 
-    // Update a bounty
-    function updateBounty(
-        uint256 bountyId,
-        string memory _title,
-        string memory _descriptionMeta,
-        string memory _descriptionIPFSHash,
-        uint256 _targetCompletionDate
-    ) external isValidBounty(bountyId) {
-        Bounty storage bounty = bounties[bountyId];
-        require(
-            msg.sender == bounty.creator,
-            "Only the creator can update the bounty"
-        );
-        require(bounty.isOpen, "Bounty is already closed");
-
-        bounty.title = _title;
-        bounty.descriptionMeta = _descriptionMeta;
-        bounty.descriptionIPFSHash = _descriptionIPFSHash;
-        bounty.targetCompletionDate = _targetCompletionDate;
-    }
-
     // Cancel a bounty
-    function cancelBounty(uint256 bountyId) external isValidBounty(bountyId) {
-        Bounty storage bounty = bounties[bountyId];
+    function cancelBounty(string memory _bountyId)
+        external
+        isValidBounty(_bountyId)
+    {
+        Bounty storage bounty = bounties[_bountyId];
         require(
             msg.sender == bounty.creator,
             "Only the creator can cancel the bounty"
@@ -167,15 +122,15 @@ contract Bounty {
             "Bounty refund failed"
         );
 
-        emit BountyCancelled(bountyId);
+        emit BountyCancelled(_bountyId);
     }
 
     // Accept a submission
-    function acceptSubmission(uint256 bountyId, address submitter)
+    function acceptSubmission(string memory _bountyId, address submitter)
         external
-        isValidBounty(bountyId)
+        isValidBounty(_bountyId)
     {
-        Bounty storage bounty = bounties[bountyId];
+        Bounty storage bounty = bounties[_bountyId];
         require(
             msg.sender == bounty.creator,
             "Only the creator can accept the bounty"
@@ -206,7 +161,7 @@ contract Bounty {
             "Platform fee transfer failed"
         );
 
-        emit SubmissionAccepted(bountyId, submitter, rewardAmount);
+        emit BountyCompleted(_bountyId, submitter, rewardAmount);
     }
 
     function setPlatformFeePercentage(uint256 _feePercentage)
