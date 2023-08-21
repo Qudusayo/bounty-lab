@@ -1,4 +1,9 @@
 import { CreateBountyValidationSchema } from "./createBounty";
 import { ApplyBountyValidationSchema } from "./applyBounty";
+import { SubmitBountyValidationSchema } from "./submitBounty";
 
-export { CreateBountyValidationSchema, ApplyBountyValidationSchema };
+export {
+  CreateBountyValidationSchema,
+  ApplyBountyValidationSchema,
+  SubmitBountyValidationSchema,
+};

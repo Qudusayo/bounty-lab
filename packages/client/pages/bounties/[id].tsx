@@ -4,21 +4,20 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Grid,
   Link as MuiLink,
   Typography,
 } from "@mui/joy";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-//@ts-ignore
-import WeaveDB from "weavedb-sdk-node";
 import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import { GoPeople, GoLock } from "react-icons/go";
 import { HiOutlineBookOpen } from "react-icons/hi";
-import { BsDot } from "react-icons/bs";
+import { BsDot, BsThreeDotsVertical } from "react-icons/bs";
 import { LuClock4 } from "react-icons/lu";
 import { ChipData } from "@/components/BountyCard";
 import { TbBrandStackshare } from "react-icons/tb";
@@ -34,6 +33,21 @@ import { useColorScheme as useJoyColorScheme } from "@mui/joy/styles";
 import { useAppContext } from "@/context/AppContext";
 import { FiEye } from "react-icons/fi";
 import ApplicationCard from "@/components/ApplicationCard";
+import {
+  BsChatLeft,
+  BsDiscord,
+  BsFillEnvelopeFill,
+  BsArrowRepeat,
+  BsCheck2,
+  BsEye,
+} from "react-icons/bs";
+// @ts-ignore
+import WeaveDB from "weavedb-sdk-node";
+import SubmitWork from "@/components/SubmitWork";
+import AcceptSubmission from "@/components/AcceptBounty";
+import AbandonBounty from "@/components/AbandonBounty";
+import CancelBounty from "@/components/CancelBounty";
+import RequestChages from "@/components/RequestChanges";
 
 export default function Bounty({
   bounty: _bounty,
@@ -43,7 +57,10 @@ export default function Bounty({
   const [bounty, setBounty] = useState(_bounty.data);
   const [value, setValue] = useState("1");
   const { address, fetchBounty } = useAppContext();
+  const [isHunter, setIsHunter] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
+  const [isOpenBounty, setIsOpenBounty] = useState(false);
+  const [isCompletedBounty, setIsCompletedBounty] = useState(false);
   const [common, setCommon] = useState("#ffffff");
   const [bountyDescription, setBountyDescription] = useState<string | null>(
     null
@@ -67,8 +84,11 @@ export default function Bounty({
   }, [mode]);
 
   useEffect(() => {
+    setIsHunter(address === bounty.hunter);
     setIsCreator(address === bounty.issuer);
-  }, [address, bounty.issuer]);
+    setIsOpenBounty(bounty.status === "open");
+    setIsCompletedBounty(bounty.status === "completed");
+  }, [address, bounty]);
 
   useEffect(() => {
     const fetchBountyDescription = async () => {
@@ -80,9 +100,9 @@ export default function Bounty({
     fetchBountyDescription();
   });
 
-  const refetchBounty = async () => {
+  const refetchBounty = async (backToDetails?: boolean) => {
     let bountyData = await fetchBounty(bountyId);
-    console.log(bountyData);
+    if (backToDetails) setValue("1");
     setBounty(bountyData);
   };
 
@@ -130,11 +150,10 @@ export default function Bounty({
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: "0.275rem",
             }}
           >
             <LuClock4 />
-            <Typography level="body-sm">
+            <Typography level="body-sm" sx={{ ml: 1 }}>
               due {formatTimestamp(bounty.deadline)}
             </Typography>
             <BsDot size={20} />
@@ -164,18 +183,21 @@ export default function Bounty({
               Posted {formatTimestamp(bounty.createdAt)}
             </Typography>
           </Box>
-          {bounty.status === "in-progress" || bounty.status === "completed" ? (
-            <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-              <Typography level="body-sm">Claimed by</Typography>
-              <Avatar address={bounty.hunter ?? "0x000000"} />
-              <Typography level="body-sm">Qudusayo</Typography>
-            </Box>
-          ) : (
-            <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-              <Button sx={{ p: 1, bgcolor: common }} color="neutral">
-                <TbBrandStackshare size={20} color="#000z" />
-              </Button>
-              {isCreator ? (
+          <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
+            <Button sx={{ p: 1.25 }} color="neutral">
+              <TbBrandStackshare size={20} />
+            </Button>
+            {isHunter && (
+              <AbandonBounty
+                refetchBounty={refetchBounty}
+                bountyId={bountyId}
+              />
+            )}
+            {isCreator && isOpenBounty && (
+              <CancelBounty refetchBounty={refetchBounty} bountyId={bountyId} />
+            )}
+            {isCreator ? (
+              isOpenBounty && (
                 <>
                   <Button
                     variant="solid"
@@ -186,15 +208,20 @@ export default function Bounty({
                     View Applications
                   </Button>
                 </>
-              ) : (
-                <ApplyBounty
-                  refetchBounty={refetchBounty}
-                  bountyId={bountyId}
-                  {...bounty}
-                />
-              )}
-            </Box>
-          )}
+              )
+            ) : isOpenBounty ? (
+              <ApplyBounty
+                refetchBounty={refetchBounty}
+                bountyId={bountyId}
+                {...bounty}
+              />
+            ) : (
+              isHunter &&
+              isCompletedBounty && (
+                <SubmitWork refetchBounty={refetchBounty} bountyId={bountyId} />
+              )
+            )}
+          </Box>
         </Box>
       </Box>
       <Box sx={{ width: "100%", typography: "body1", mb: 4 }}>
@@ -286,12 +313,18 @@ export default function Bounty({
                     left: "0",
                   },
                 }}
-                icon={<GoLock size={15} />}
+                icon={
+                  isHunter || isCreator ? (
+                    <BsChatLeft size={15} />
+                  ) : (
+                    <GoLock size={15} />
+                  )
+                }
                 iconPosition="start"
                 disableRipple={true}
                 label={"Discussion"}
                 value="3"
-                disabled
+                disabled={isHunter || isCreator ? false : true}
               />
             </TabList>
           </Box>
@@ -301,6 +334,21 @@ export default function Bounty({
               p: 0,
             }}
           >
+            {bounty.status === "completed" && (
+              <Box
+                sx={{
+                  backgroundColor: common,
+                  p: 3,
+                  borderRadius: 6,
+                  mt: 3,
+                  fontWeight: 600,
+                  border: "1px solid #00A11B",
+                  boxShadow: "rgba(0, 161, 27, 0.4) 0px 0px 8px",
+                }}
+              >
+                This Bounty has been completed!
+              </Box>
+            )}
             <Typography level="h4" my={3}>
               Bounty Description
             </Typography>
@@ -347,7 +395,10 @@ export default function Bounty({
               <ApplicationCard
                 key={i}
                 {...application}
+                bountyId={bountyId}
+                refetch={refetchBounty}
                 issuer={bounty.issuer}
+                acceptedHunter={bounty.hunter}
               />
             ))}
           </TabPanel>
@@ -357,7 +408,244 @@ export default function Bounty({
             }}
             value="3"
           >
-            Part 3
+            {bounty.submissionStatus === "submitted" && (
+              <Box
+                sx={{
+                  backgroundColor: common,
+                  p: 3,
+                  borderRadius: 6,
+                  mb: 2,
+                  border:
+                    bounty.status === "completed" ? "1px solid #00A11B" : "",
+                  boxShadow:
+                    bounty.status === "completed"
+                      ? "rgba(0, 161, 27, 0.4) 0px 0px 8px"
+                      : "",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography fontWeight={"600"}>
+                    {shortenAddress(bounty.hunter ?? "")} submitted work!
+                  </Typography>
+                  <MuiLink
+                    rel="noopener"
+                    href={bounty.submissionLink}
+                    target="_blank"
+                    variant="solid"
+                    startDecorator={<BsEye />}
+                    sx={{
+                      borderRadius: 5,
+                      p: 0.5,
+                      px: 1.25,
+                      mr: 0.125,
+                      fontSize: "1rem",
+                      textDecoration: "none",
+
+                      "&:hover": {
+                        textDecoration: "none",
+                      },
+                    }}
+                  >
+                    View Work
+                  </MuiLink>
+                </Box>
+
+                {isCreator &&
+                  bounty.hunter &&
+                  bounty.status !== "completed" && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        gap: 1.5,
+                        mt: 4,
+                      }}
+                    >
+                      <RequestChages
+                        bountyId={bountyId}
+                        refetchBounty={refetchBounty}
+                      />
+                      <AcceptSubmission
+                        bountyId={bountyId}
+                        hunter={bounty.hunter}
+                        refetchBounty={refetchBounty}
+                      />
+                    </Box>
+                  )}
+              </Box>
+            )}
+            {bounty.submissionStatus === "reviewed" && (
+              <Box
+                sx={{
+                  backgroundColor: common,
+                  p: 3,
+                  borderRadius: 6,
+                  mb: 2,
+                  border:
+                    bounty.submissionStatus === "reviewed"
+                      ? "1px solid #a19600"
+                      : "",
+                  boxShadow:
+                    bounty.submissionStatus === "reviewed"
+                      ? "rgba(161, 118, 0, 0.4) 0px 0px 8px"
+                      : "",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography fontWeight={"600"}>
+                    {isCreator ? "You" : shortenAddress(bounty.hunter ?? "")}{" "}
+                    request some changes!
+                  </Typography>
+                  {!isCreator && (
+                    <SubmitWork
+                      refetchBounty={refetchBounty}
+                      bountyId={bountyId}
+                    />
+                  )}
+                </Box>
+                <Typography>{bounty.submissionFeedback}</Typography>
+              </Box>
+            )}
+            <Grid container spacing={2} sx={{ flexGrow: 1 }}>
+              <Grid xs={6}>
+                <Box
+                  sx={{
+                    backgroundColor: common,
+                    p: 3,
+                    borderRadius: 6,
+                    mb: 2,
+                  }}
+                >
+                  <Typography fontWeight={"600"}>Get in touch</Typography>
+                  <Typography level="body-sm" sx={{ mt: 2 }}>
+                    You
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      my: 1,
+                    }}
+                  >
+                    {bounty.communication.method === "discord" ? (
+                      <BsDiscord size={20} />
+                    ) : (
+                      <BsFillEnvelopeFill size={20} />
+                    )}
+                    <Typography>{bounty.communication.value}</Typography>
+                  </Box>
+                  <Typography level="body-sm" sx={{ mt: 2 }}>
+                    Bounty Hunter
+                  </Typography>
+                  {bounty.hunter ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        my: 1,
+                      }}
+                    >
+                      {bounty.communication.method === "discord" ? (
+                        <BsDiscord size={20} />
+                      ) : (
+                        <BsFillEnvelopeFill size={20} />
+                      )}
+                      <Typography>
+                        {
+                          bounty.applications?.find(
+                            (application) =>
+                              application.hunter === bounty.hunter
+                          )?.communication.value
+                        }
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography sx={{ my: 1 }}>
+                      No contact information provided.
+                    </Typography>
+                  )}
+                </Box>
+              </Grid>
+              <Grid xs={6}>
+                <Box
+                  sx={{
+                    backgroundColor: common,
+                    p: 3,
+                    borderRadius: 6,
+                    mb: 2,
+                  }}
+                >
+                  <Typography fontWeight={"600"}>Having trouble?</Typography>
+                </Box>
+              </Grid>
+            </Grid>
+            <Box
+              sx={{
+                backgroundColor: common,
+                p: 3,
+                borderRadius: 6,
+              }}
+            >
+              <Typography fontWeight={"600"}>Activity Log</Typography>
+              {bounty.submissions && bounty.submissions.length
+                ? bounty.submissions.map((log, i) => (
+                    <Box key={i}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          my: 2,
+                        }}
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Avatar address={log.user} />
+                          <Typography>{shortenAddress(log.user)}</Typography>
+                        </Box>
+                        <Typography>
+                          {formatTimestamp(log.createdAt)}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          backgroundColor: "neutral.800",
+                          p: 1,
+                          borderRadius: 6,
+                          my: 1.5,
+                        }}
+                      >
+                        <Typography fontWeight={600}>
+                          {log.type === "submission" ? "Submitted work" : null}
+                          {log.type === "review" ? "Requested Changes" : null}
+                          {log.type === "accepted"
+                            ? "Accepted submission"
+                            : null}
+                        </Typography>
+                        {log.message && (
+                          <Typography sx={{ mt: 2 }}>{log.message}</Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  ))
+                : null}
+            </Box>
           </TabPanel>
         </TabContext>
       </Box>
@@ -365,15 +653,49 @@ export default function Bounty({
   );
 }
 
+// export const getServerSideProps: GetServerSideProps<{
+//   bounty: { data: IBounty; id: string };
+// }> = async (context) => {
+//   try {
+//     const { id } = context.query;
+
+//     const req = await axios.get(`${process.env.SERVER_URL}/bounties/${id}`);
+//     let bounty = req.data;
+
+//     if (req.status !== 200) {
+//       return {
+//         redirect: {
+//           destination: "/404",
+//           permanent: false,
+//         },
+//       };
+//     }
+
+//     return { props: { bounty } };
+//   } catch (error) {
+//     return {
+//       redirect: {
+//         destination: "/404",
+//         permanent: false,
+//       },
+//     };
+//   }
+// };
+
 export const getServerSideProps: GetServerSideProps<{
   bounty: { data: IBounty; id: string };
 }> = async (context) => {
   const { id } = context.query;
 
-  const req = await axios.get(`${process.env.SERVER_URL}/bounties/${id}`);
-  let bounty = req.data;
-
-  if (req.status !== 200) {
+  const db = new WeaveDB({
+    contractTxId: process.env.NEXT_PUBLIC_WEAVEDB_ContractTxId,
+  });
+  await db.init();
+  let bounties: Promise<{ data: IBounty; id: string }[]> = await db.cget(
+    "bounties",
+    ["txId", "==", id]
+  );
+  if (!(await bounties).length) {
     return {
       redirect: {
         destination: "/404",
@@ -382,5 +704,14 @@ export const getServerSideProps: GetServerSideProps<{
     };
   }
 
-  return { props: { bounty } };
+  let bounty = (await bounties)[0];
+
+  return {
+    props: {
+      bounty: {
+        data: bounty.data,
+        id: bounty.id,
+      },
+    },
+  };
 };

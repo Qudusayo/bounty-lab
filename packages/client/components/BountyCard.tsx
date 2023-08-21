@@ -11,7 +11,7 @@ import Avatar from "@/utils/Avatar";
 
 export const ChipData = {
   open: { color: "primary", status: "Open" },
-  "in-progress": { color: "warning", status: "In Progress" },
+  "in progress": { color: "warning", status: "In Progress" },
   completed: { color: "success", status: "Completed" },
   cancelled: { color: "neutral", status: "Cancelled" },
 };
@@ -132,11 +132,13 @@ export default function BountyCard({
             </Typography>
           </Box>
         </Box>
-        {status === "in-progress" || status === "completed" ? (
+        {status === "in progress" || status === "completed" ? (
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
             <Typography level="body-sm">Claimed by</Typography>
             <Avatar address={issuer} />
-            <Typography level="body-sm">Qudusayo</Typography>
+            <Typography level="body-sm">
+              {shortenAddress(hunter || "")}
+            </Typography>
           </Box>
         ) : (
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>

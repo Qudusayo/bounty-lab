@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/joy";
+import { Box, Button, Chip, Typography } from "@mui/joy";
 import React from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { useEffect, useState } from "react";
@@ -12,15 +12,20 @@ import { IoMdCheckmark, IoMdClose } from "react-icons/io";
 import { useAppContext } from "@/context/AppContext";
 
 interface ApplicationCardProps extends BountyApplication {
+  bountyId: string;
   issuer: `0x${string}`;
+  refetch: () => void;
+  acceptedHunter: `0x${string}` | null;
 }
 
 export default function ApplicationCard(application: ApplicationCardProps) {
   const { mode } = useColorScheme();
-  const { address } = useAppContext();
+  const { address, acceptApplication, declineApplicantion } = useAppContext();
   const [common, setCommon] = useState("#ffffff");
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isCreator, setIsCreator] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [declining, setDeclining] = useState(false);
 
   useEffect(() => {
     setIsCreator(application.issuer === address);
@@ -44,6 +49,20 @@ export default function ApplicationCard(application: ApplicationCardProps) {
     }
   }, [mode]);
 
+  const acceptApplicant = async (address: `0x${string}`) => {
+    setAccepting(true);
+    await acceptApplication(application.bountyId, address);
+    application.refetch();
+    setAccepting(false);
+  };
+
+  const declineApplicant = async (address: `0x${string}`) => {
+    setDeclining(true);
+    await declineApplicantion(application.bountyId, address);
+    application.refetch();
+    setDeclining(false);
+  };
+
   return (
     <Box px={3} py={1} my={2} borderRadius={"md"} bgcolor={common}>
       <Box>
@@ -53,26 +72,52 @@ export default function ApplicationCard(application: ApplicationCardProps) {
           justifyContent={"space-between"}
         >
           <Box display={"flex"} alignItems={"center"} gap={".5rem"} my={3}>
-            <Avatar address={application.hunter} />
-            <Typography level="body-sm">
-              {shortenAddress(application.hunter)}
-            </Typography>
-          </Box>
-          {isCreator && (
             <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-              <Button variant="soft" color="danger">
-                <IoMdClose size={20} color="#000z" />
-              </Button>
-              <Button
-                variant="solid"
-                color="primary"
-                startDecorator={<IoMdCheckmark />}
-                onClick={() => {}}
-              >
-                Accept Application
-              </Button>
+              <Avatar address={application.hunter} />
+              <Typography level="body-sm">
+                {shortenAddress(application.hunter)}
+              </Typography>
             </Box>
-          )}
+            {application.acceptedHunter === application.hunter && (
+              <Chip
+                startDecorator={<IoMdCheckmark />}
+                size="sm"
+                color="primary"
+              >
+                Accepted
+              </Chip>
+            )}
+            {application.status === "rejected" && (
+              <Chip startDecorator={<IoMdCheckmark />} size="sm" color="danger">
+                Rejected
+              </Chip>
+            )}
+          </Box>
+          {isCreator &&
+            !application.acceptedHunter &&
+            application.status !== "rejected" && (
+              <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
+                <Button
+                  variant="soft"
+                  color="danger"
+                  onClick={() => declineApplicant(application.hunter)}
+                  loading={declining}
+                  disabled={declining}
+                >
+                  <IoMdClose size={20} color="#000z" />
+                </Button>
+                <Button
+                  variant="solid"
+                  color="primary"
+                  startDecorator={<IoMdCheckmark />}
+                  onClick={() => acceptApplicant(application.hunter)}
+                  loading={accepting}
+                  disabled={accepting}
+                >
+                  Accept Application
+                </Button>
+              </Box>
+            )}
         </Box>
         <Typography>
           Applied {formatTimestamp(application.timestamp)}

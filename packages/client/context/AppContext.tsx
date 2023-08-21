@@ -3,22 +3,38 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { isNil } from "ramda";
 import WeaveDB from "weavedb-sdk";
 import { useAccount } from "wagmi";
+import { v4 } from "uuid";
+
 import {
   Bounty,
   NullableValue,
   IBountyContextProps,
   BountyApplication,
 } from "@/types";
+import { useContract } from "@/hooks/contract";
+
+type OrderSortKey = Pick<IBountyContextProps, "orderSort">;
+type StatusSortKey = Pick<IBountyContextProps, "statusSort">;
 
 const defaultState: IBountyContextProps = {
   address: undefined,
   bounties: [],
+  statusSort: "",
+  setStatusSort: () => {},
+  orderSort: "createdAt",
+  setOrderSort: () => {},
+  acceptApplication: () => Promise.resolve(),
+  declineApplicantion: () => Promise.resolve(),
   fetchBounty: () => Promise.resolve({} as Bounty),
   fetchBounties: () => Promise.resolve(),
   createBounty: () => Promise.resolve(),
   cancelBounty: () => Promise.resolve(),
   updateBounty: () => Promise.resolve(),
   applyToBounty: () => Promise.resolve(),
+  accpetSubmission: () => Promise.resolve(),
+  submitBounty: () => Promise.resolve(),
+  abandonBounty: () => Promise.resolve(),
+  requestChanges: () => Promise.resolve(),
 };
 
 export const AppContext = createContext<IBountyContextProps>(defaultState);
@@ -35,11 +51,17 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const [bounties, setBounties] = useState<{ data: Bounty; id: string }[]>([]);
   const { address, isConnected } = useAccount();
+  const [statusSort, setStatusSort] =
+    useState<StatusSortKey[keyof StatusSortKey]>("");
+  const [orderSort, setOrderSort] =
+    useState<OrderSortKey[keyof OrderSortKey]>("createdAt");
+  const { approveAndSubmitTx, acceptBountyTx } = useContract();
 
   useEffect(() => {
     const init = async () => {
       const _db = new WeaveDB({
         contractTxId,
+        nocache: true,
       });
       await _db.init();
       setDbInstance(_db);
@@ -51,7 +73,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     if (dbInstance) {
       fetchBounties();
     }
-  }, [dbInstance]);
+  }, [dbInstance, statusSort, orderSort]);
 
   useEffect(() => {
     async function createVirtualUser() {
@@ -104,11 +126,146 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [address, isConnected, dbInstance]);
 
+  const acceptApplication = async (id: string, hunter: `0x${string}`) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+      let applications = bounty.applications;
+
+      if (applications) {
+        // Find the application where the hunter is the applicant and set the status to accepted
+        applications = applications.map((application) => {
+          if (application.hunter === hunter) {
+            return { ...application, status: "accepted" };
+          } else {
+            return application;
+          }
+        });
+      }
+
+      await dbInstance!.update<Bounty>(
+        { ...bounty, hunter, status: "in progress", applications },
+        "bounties",
+        id
+        // user
+      );
+      await fetchBounties();
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const accpetSubmission = async (id: string) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+      if (bounty.issuer !== address) return;
+      if (bounty.status === "completed") return;
+      if (!bounty.hunter) return;
+
+      await acceptBountyTx(bounty.txId, bounty.hunter);
+
+      await dbInstance!.update<Bounty>(
+        { ...bounty, status: "completed" },
+        "bounties",
+        id
+        // user
+      );
+      await fetchBounties();
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const abandonBounty = async (id: string) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+      let applications = bounty.applications;
+
+      if (bounty.hunter !== address) return;
+
+      if (applications) {
+        applications = applications.map((application) => {
+          if (application.hunter === address) {
+            return { ...application, status: "rejected" };
+          } else {
+            return application;
+          }
+        });
+      }
+
+      await dbInstance!.update<Bounty>(
+        {
+          ...bounty,
+          applications,
+          status: "open",
+          hunter: "" as `0x${string}`,
+        },
+        "bounties",
+        id
+        // user
+      );
+      await fetchBounties();
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const cancelBounty = async (id: string) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+
+      if (bounty.issuer !== address) return;
+      if (bounty.status === "completed" || bounty.status === "in progress")
+        return;
+
+      let cancelBountyReq = await dbInstance!.update<Bounty>(
+        {
+          ...bounty,
+          status: "cancelled",
+        },
+        "bounties",
+        id
+        // user
+      );
+      await fetchBounties();
+      return cancelBountyReq;
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const declineApplicantion = async (id: string, hunter: `0x${string}`) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+      let applications = bounty.applications;
+
+      if (applications) {
+        applications = applications.map((application) => {
+          if (application.hunter === hunter) {
+            return { ...application, status: "rejected" };
+          } else {
+            return application;
+          }
+        });
+      }
+
+      await dbInstance!.update<Bounty>(
+        { ...bounty, applications },
+        "bounties",
+        id
+        // user
+      );
+      await fetchBounties();
+    } catch (error) {
+      return error;
+    }
+  };
+
   const fetchBounties = async () => {
-    let bounties = await dbInstance!.cget<Bounty>("bounties", [
-      "createdAt",
-      "desc",
-    ]);
+    let bounties = await dbInstance!.cget<Bounty>(
+      "bounties",
+      [orderSort, "desc"],
+      statusSort && ["status", "==", statusSort]
+    );
 
     let aggregatedBounties: { data: Bounty; id: string }[] = bounties.map(
       (bounty) => {
@@ -128,22 +285,16 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createBounty = async (bountyData: Bounty) => {
     console.log("Creating bounty...");
+    let txId = v4();
     try {
-      const bounty = await dbInstance!.add(bountyData, "bounties", user);
+      let bountyDataWithTxId = { ...bountyData, txId };
+      await approveAndSubmitTx(txId, bountyData.reward);
+
+      const bounty = await dbInstance!.add(bountyDataWithTxId, "bounties");
       if (bounty.success) {
         console.log("Bounty created!");
         fetchBounties();
       }
-    } catch (error) {
-      return error;
-    }
-  };
-
-  const cancelBounty = async (id: string) => {
-    console.log("Deleting bounty...");
-    try {
-      await dbInstance!.delete("bounties", id, user);
-      await fetchBounties();
     } catch (error) {
       return error;
     }
@@ -162,16 +313,54 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const getBountyApplicants = async (id: string) => {};
 
   // TODO:
-  const cancleBounty = async (id: string) => {};
+  const requestChanges = async (id: string, message: string) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+
+      if (bounty.issuer !== address) return;
+
+      let submissionRequest = await dbInstance!.update(
+        {
+          ...bounty,
+          submissionFeedback: message,
+          submissionStatus: "reviewed",
+          submissions: bounty?.submissions
+            ? [
+                ...bounty.submissions,
+                {
+                  createdAt: Date.now(),
+                  type: "review",
+                  user: address,
+                  message,
+                },
+              ]
+            : [
+                {
+                  createdAt: Date.now(),
+                  type: "request",
+                  user: address,
+                  message,
+                },
+              ],
+        },
+        "bounties",
+        id
+        // user
+      );
+      await fetchBounties();
+      return submissionRequest;
+    } catch (error) {
+      return error;
+    }
+  };
 
   const applyToBounty = async (
     id: string,
     bountyApplicationData: BountyApplication
   ) => {
     try {
-      let bounty = await dbInstance!.get("bounties", id);
-
-      let resp = await dbInstance!.update(
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+      let status = await dbInstance!.update(
         {
           ...bounty,
           applications: bounty?.applications
@@ -179,10 +368,53 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             : [bountyApplicationData],
         },
         "bounties",
-        id,
+        id
         // user
       );
-      console.log({ resp });
+      console.log(status);
+
+      await fetchBounties();
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const submitBounty = async (
+    id: string,
+    submissionLink: string,
+    message?: string
+  ) => {
+    try {
+      let bounty = await dbInstance!.get<Bounty>("bounties", id);
+      let submissionRequest = await dbInstance!.update(
+        {
+          ...bounty,
+          submissionLink,
+          submissionStatus: "submitted",
+          submissions: bounty?.submissions
+            ? [
+                ...bounty.submissions,
+                {
+                  createdAt: Date.now(),
+                  type: "submission",
+                  user: address,
+                  message,
+                },
+              ]
+            : [
+                {
+                  createdAt: Date.now(),
+                  type: "submission",
+                  user: address,
+                  message,
+                },
+              ],
+        },
+        "bounties",
+        id
+        // user
+      );
+      return submissionRequest;
 
       await fetchBounties();
     } catch (error) {
@@ -193,12 +425,22 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const appContextValue: IBountyContextProps = {
     address,
     bounties,
+    statusSort,
+    setStatusSort,
+    orderSort,
+    setOrderSort,
+    acceptApplication,
+    declineApplicantion,
     fetchBounty,
     fetchBounties,
     createBounty,
     cancelBounty,
     updateBounty,
     applyToBounty,
+    accpetSubmission,
+    submitBounty,
+    abandonBounty,
+    requestChanges,
   };
 
   return (

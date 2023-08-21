@@ -6,6 +6,19 @@
           "applicationMessage": {
             "type": "string"
           },
+          "communication": {
+            "properties": {
+              "method": {
+                "enum": ["email", "discord"],
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": ["method", "value"],
+            "type": "object"
+          },
           "hunter": {
             "pattern": "^0x[0-9a-fA-F]+$",
             "type": "string"
@@ -18,7 +31,13 @@
             "type": "number"
           }
         },
-        "required": ["hunter", "status", "timestamp", "applicationMessage"],
+        "required": [
+          "hunter",
+          "status",
+          "timestamp",
+          "applicationMessage",
+          "communication"
+        ],
         "type": "object"
       },
       "type": "array"
@@ -60,6 +79,32 @@
     "status": {
       "enum": ["open", "in progress", "completed", "cancelled"],
       "type": "string"
+    },
+    "submissionLink": {
+      "type": "string"
+    },
+    "submissionLog": {
+      "items": {
+        "properties": {
+          "createdAt": {
+            "type": "number"
+          },
+          "user": {
+            "pattern": "^0x[0-9a-fA-F]+$",
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "enum": ["submission", "review", "rejected", "accepted"],
+            "type": "string"
+          }
+        },
+        "required": ["status", "createdAt"],
+        "type": "object"
+      },
+      "type": "array"
     },
     "title": {
       "type": "string"

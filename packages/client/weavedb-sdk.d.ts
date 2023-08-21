@@ -1,10 +1,10 @@
 declare class WeaveDB {
-  constructor(options: { contractTxId: string });
+  constructor(options: { contractTxId: string; nocache?: boolean });
   init(): Promise<void>;
   createTempAddress(address: string): Promise<any>;
   getAddressLink(address: string): Promise<any>;
   add(data: any, collection_name: string, user?: IUser): Promise<any>;
-  get<T>(...args: Parameters<GetFunction>): Promise<T | any>;
+  get<T>(...args: Parameters<GetFunction>): Promise<T>;
   cget<T>(...args: Parameters<GetFunction>): Promise<
     {
       id: string;
@@ -18,8 +18,8 @@ declare class WeaveDB {
   >;
   createTempAddress(address: string): Promise<any>;
   delete(collection_name: string, doc_id: string, user?: IUser): Promise<any>;
-  update(
-    data: any,
+  update<T>(
+    data: T,
     collection_name: string,
     doc_id: string,
     user?: IUser

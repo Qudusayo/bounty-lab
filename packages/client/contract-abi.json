@@ -2,9 +2,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "bountyId",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "_bountyId",
+        "type": "string"
       },
       {
         "internalType": "address",
@@ -33,9 +33,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "bountyId",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "name": "BountyCancelled",
@@ -46,9 +46,34 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "bountyId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "hunter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "rewardAmount",
         "type": "uint256"
+      }
+    ],
+    "name": "BountyCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "bountyId",
+        "type": "string"
       },
       {
         "indexed": false,
@@ -63,15 +88,15 @@
         "type": "uint256"
       }
     ],
-    "name": "BountyCreated",
+    "name": "BountyOpened",
     "type": "event"
   },
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "bountyId",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "_bountyId",
+        "type": "string"
       }
     ],
     "name": "cancelBounty",
@@ -83,23 +108,8 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_title",
+        "name": "_bountyId",
         "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_descriptionMeta",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_descriptionIPFSHash",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_targetCompletionDate",
-        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -139,69 +149,11 @@
     "type": "function"
   },
   {
-    "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "bountyId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "submitter",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "rewardAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "SubmissionAccepted",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "bountyId",
-        "type": "uint256"
-      },
-      {
         "internalType": "string",
-        "name": "_title",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_descriptionMeta",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_descriptionIPFSHash",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_targetCompletionDate",
-        "type": "uint256"
-      }
-    ],
-    "name": "updateBounty",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "name": "bounties",
@@ -210,31 +162,6 @@
         "internalType": "address",
         "name": "creator",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "title",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "descriptionMeta",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "descriptionIPFSHash",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "creationDate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "targetCompletionDate",
-        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -268,33 +195,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "creatorBounties",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "bountyId",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "_bountyId",
+        "type": "string"
       }
     ],
     "name": "getBounty",
@@ -303,31 +206,6 @@
         "internalType": "address",
         "name": "creator",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "title",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "descriptionMeta",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "descriptionIPFSHash",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "creationDate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "targetCompletionDate",
-        "type": "uint256"
       },
       {
         "internalType": "uint256",

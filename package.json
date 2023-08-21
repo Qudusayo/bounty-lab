@@ -21,7 +21,7 @@
     "hardhat:deploy-reset-watch": "yarn workspace @bounty-lab/hardhat deploy-reset-watch",
     "hardhat:watch": "yarn workspace @bounty-lab/hardhat watch",
     "hardhat:fork-mainnet": "yarn workspace @bounty-lab/hardhat fork-mainnet",
-    "dev": "concurrently --kill-others-on-fail \"yarn server:dev\"  \"yarn client:dev\""
+    "dev": "concurrently --kill-others-on-fail \"yarn client:dev --port 9000\"  \"yarn client:dev --port 4500\""
   },
   "repository": {
     "type": "git",

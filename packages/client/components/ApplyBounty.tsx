@@ -36,7 +36,7 @@ export default function ApplyBounty(bounty: ApplyBountyProps) {
     setHasAppliedToBounty(
       applications?.some((item) => item.hunter === address) || false
     );
-  }, [applications]);
+  }, [applications, address]);
 
   return (
     <React.Fragment>

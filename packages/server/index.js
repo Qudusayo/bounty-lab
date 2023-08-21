@@ -6,6 +6,8 @@ dotenv.config();
 const app = express();
 const db = new WeaveDB({
   contractTxId: process.env.WEAVEDB_ContractTxId,
+  remoteStateSyncEnabled: true,
+  remoteStateSyncSource: "https://dre-3.warp.cc/contract",
 });
 
 app.get("/bounties/:id", async (req, res) => {

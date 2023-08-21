@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev",
+        "dev": "next dev --port=5500",
         "build": "next build",
         "start": "next start",
         "lint": "next lint"
@@ -19,12 +19,14 @@
         "@mui/lab": "^5.0.0-alpha.138",
         "@mui/material": "^5.14.3",
         "@mui/x-date-pickers": "^6.11.0",
+        "@octokit/rest": "^20.0.1",
         "@rainbow-me/rainbowkit": "^1.0.2",
         "@types/marked": "^5.0.1",
         "@types/uuid": "^9.0.2",
         "axios": "^1.4.0",
         "dayjs": "^1.11.9",
         "ethers": "^5.7.2",
+        "firebase": "^10.2.0",
         "formik": "^2.4.3",
         "he": "^1.2.0",
         "ipfs-http-client": "^60.0.1",
@@ -43,6 +45,7 @@
         "viem": "^0.3.30",
         "wagmi": "^1.2",
         "weavedb-sdk": "^0.28.16",
+        "weavedb-sdk-node": "^0.28.17",
         "yup": "^1.2.0"
     },
     "devDependencies": {
