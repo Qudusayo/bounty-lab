@@ -85,19 +85,20 @@ export default function CreateBounty() {
                 setSubmitting(true);
                 const parsedHtml = marked(values.description);
                 const decodedText = he.decode(parsedHtml);
-                const plainText = decodedText
-                  .replace(/<[^>]*>/g, "")
-                  .replace(/\n/g, " ");
+                // const plainText = decodedText
+                //   .replace(/<[^>]*>/g, "")
+                //   .replace(/\n/g, " ");
 
                 if (address) {
                   let ipfsHash = await handleUpload(
-                    values.description.toString()
+                    JSON.stringify({
+                      title: values.title,
+                      description: values.description,
+                    })
                   );
 
                   let createBountyReq = await createBounty({
-                    title: values.title,
-                    descriptionMeta: plainText.slice(0, 200),
-                    descriptionIPFSHash: ipfsHash.toString(),
+                    bountyMeta: ipfsHash.toString(),
                     communication: {
                       method: values.communicationMethod.type,
                       value: values.communicationMethod.value,
@@ -107,10 +108,6 @@ export default function CreateBounty() {
                     deadline: new Date(
                       values.targetCompletionDate as unknown as number
                     ).getTime(),
-                    hunter: null,
-                    issuer: address,
-                    status: "open",
-                    txId: v4(),
                   });
 
                   if (createBountyReq) {

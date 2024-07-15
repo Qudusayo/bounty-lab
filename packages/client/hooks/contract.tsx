@@ -1,10 +1,29 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
-import { erc20ABI, useContractWrite } from "wagmi";
+import { erc20ABI, useContractWrite, useContractRead, useAccount } from "wagmi";
 import { waitForTransaction } from "@wagmi/core";
 import ContractAbi from "../contract-abi.json";
+import FactoryAbi from "../factory-abi.json";
 
 export function useContract() {
+  const { address } = useAccount();
+
+  const { refetch: getApproval } = useContractRead({
+    abi: erc20ABI,
+    functionName: "allowance",
+    address: process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`,
+    args: [
+      address as `0x${string}`,
+      process.env.NEXT_PUBLIC_BOUNTY_FACTORY_CONTRACT_ADDRESS as `0x${string}`,
+    ],
+  });
+
+  const { refetch: getBounties } = useContractRead({
+    abi: FactoryAbi,
+    functionName: "getBounties",
+    address: process.env.NEXT_PUBLIC_BOUNTY_FACTORY_CONTRACT_ADDRESS as `0x${string}`,
+  });
+
   const { writeAsync: approveToken } = useContractWrite({
     abi: erc20ABI,
     functionName: "approve",
@@ -12,9 +31,9 @@ export function useContract() {
   });
 
   const { writeAsync: createBounty } = useContractWrite({
-    abi: ContractAbi,
+    abi: FactoryAbi,
     functionName: "createBounty",
-    address: process.env.NEXT_PUBLIC_MAIN_CONTRACT_ADDRESS as `0x${string}`,
+    address: process.env.NEXT_PUBLIC_BOUNTY_FACTORY_CONTRACT_ADDRESS as `0x${string}`,
   });
 
   const { writeAsync: acceptBounty } = useContractWrite({
@@ -29,32 +48,57 @@ export function useContract() {
     address: process.env.NEXT_PUBLIC_MAIN_CONTRACT_ADDRESS as `0x${string}`,
   });
 
-  const approveAndSubmitTx = async (_id: string, amount: number) => {
+  const checkApproval = async (amount: number) => {
     try {
-      let tokenApproval = await approveToken({
-        args: [
-          process.env.NEXT_PUBLIC_MAIN_CONTRACT_ADDRESS as `0x${string}`,
-          ethers.utils.parseUnits(amount.toString(), "ether").toBigInt(),
-        ],
-      });
-
-      let txStatus = await waitForTransaction({ hash: tokenApproval.hash });
-
-      if (txStatus.status === "success") {
-        let createBountyTx = await createBounty({
+      const approval = await getApproval();
+      if (Number(approval.data) < amount) {
+        let tokenApproval = await approveToken({
           args: [
-            _id,
+            process.env
+              .NEXT_PUBLIC_BOUNTY_FACTORY_CONTRACT_ADDRESS as `0x${string}`,
             ethers.utils.parseUnits(amount.toString(), "ether").toBigInt(),
           ],
         });
 
-        let txStatus = await waitForTransaction({ hash: createBountyTx.hash });
+        let txStatus = await waitForTransaction({ hash: tokenApproval.hash });
+        console.log(txStatus);
+        return txStatus.status === "success";
+      }
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
 
-        if (txStatus.status === "success") return true;
-      } else {
-        return false;
+  const approveAndSubmitTx = async (
+    _bountyMetadata: string,
+    _reward: number,
+    _communicationMethod: string,
+    _communicationValue: string,
+    _deadline: number
+  ) => {
+    try {
+      const approval = await checkApproval(_reward);
+      if (approval) {
+        let createBountyReqTx = await createBounty({
+          args: [
+            _bountyMetadata,
+            ethers.utils.parseUnits(_reward.toString(), "ether").toBigInt(),
+            _communicationMethod,
+            _communicationValue,
+            _deadline,
+          ],
+        });
+
+        let txStatus = await waitForTransaction({
+          hash: createBountyReqTx.hash,
+        });
+        console.log("CREATED BOUNTY", txStatus);
+        return txStatus.status === "success";
       }
     } catch (error) {
+      console.log(error);
       return false;
     }
   };
@@ -88,6 +132,7 @@ export function useContract() {
   };
 
   return {
+    getBounties,
     approveAndSubmitTx,
     acceptBountyTx,
     cancelBountyTx,

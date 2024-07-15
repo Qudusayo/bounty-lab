@@ -14,15 +14,19 @@ import { TbWorldUpload } from "react-icons/tb";
 import { GrCheckmark } from "react-icons/gr";
 import { useAppContext } from "@/context/AppContext";
 import { handleUpload } from "@/functions";
+import { useBountyHandler } from "@/hooks/useBountyHandler";
+import { useBountyDetail } from "@/hooks/useBountyDetail";
 
 interface ApplyBountyProps {
-  bountyId: string;
+  bountyId: `0x${string}`;
   refetchBounty: () => void;
 }
 
 export default function SubmitWork(bounty: ApplyBountyProps) {
-  const { address, submitBounty } = useAppContext();
+  const { address } = useAppContext();
   const [open, setOpen] = React.useState<boolean>(false);
+  const { submitWork } = useBountyHandler(bounty.bountyId);
+  const { refreshBountyData } = useBountyDetail(bounty.bountyId);
 
   return (
     <React.Fragment>
@@ -55,15 +59,23 @@ export default function SubmitWork(bounty: ApplyBountyProps) {
                 setSubmitting(true);
 
                 try {
-                  let submission = await submitBounty(
-                    bounty.bountyId,
-                    values.submissionURL,
-                    values.description
+                  let submissionDetailIPFSHash = (
+                    await handleUpload(
+                      JSON.stringify({
+                        description: values.description,
+                        submissionURL: values.submissionURL,
+                      })
+                    )
+                  ).toString();
+                  let submission = await submitWork(
+                    submissionDetailIPFSHash,
+                    false,
+                    true
                   );
-                  //@ts-ignore
-                  if (submission.success) {
+
+                  if (submission) {
                     resetForm();
-                    bounty.refetchBounty();
+                    refreshBountyData();
                     setOpen(false);
                   }
                 } catch (error) {

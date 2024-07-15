@@ -10,8 +10,6 @@
     "client:build": "yarn workspace @bounty-lab/client build",
     "client:start": "yarn workspace @bounty-lab/client start",
     "client:lint": "yarn workspace @bounty-lab/client lint",
-    "server:dev": "yarn workspace @bounty-lab/server dev",
-    "server:start": "yarn workspace @bounty-lab/server start",
     "hardhat:test": "yarn workspace @bounty-lab/hardhat test",
     "hardhat:test-local": "yarn workspace @bounty-lab/hardhat test-local",
     "hardhat:create-account": "yarn workspace @bounty-lab/hardhat create-account",
@@ -20,8 +18,7 @@
     "hardhat:deploy": "yarn workspace @bounty-lab/hardhat deploy",
     "hardhat:deploy-reset-watch": "yarn workspace @bounty-lab/hardhat deploy-reset-watch",
     "hardhat:watch": "yarn workspace @bounty-lab/hardhat watch",
-    "hardhat:fork-mainnet": "yarn workspace @bounty-lab/hardhat fork-mainnet",
-    "dev": "concurrently --kill-others-on-fail \"yarn client:dev --port 9000\"  \"yarn client:dev --port 4500\""
+    "hardhat:fork-mainnet": "yarn workspace @bounty-lab/hardhat fork-mainnet"
   },
   "repository": {
     "type": "git",

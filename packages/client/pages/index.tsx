@@ -19,15 +19,9 @@ import { Bounty } from "@/types";
 
 export default function Bounties() {
   const [value, setValue] = React.useState("1");
-  const [allBounties, setAllBounties] = useState<
-    { data: Bounty; id: string }[]
-  >([]);
-  const [postedBounties, setPostedBounties] = useState<
-    { data: Bounty; id: string }[]
-  >([]);
-  const [assignedBounties, setAssignedBounties] = useState<
-    { data: Bounty; id: string }[]
-  >([]);
+  const [allBounties, setAllBounties] = useState<`0x${string}`[]>([]);
+  const [postedBounties, setPostedBounties] = useState<`0x${string}`[]>([]);
+  const [assignedBounties, setAssignedBounties] = useState<`0x${string}`[]>([]);
   const {
     address,
     bounties,
@@ -44,17 +38,6 @@ export default function Bounties() {
   useEffect(() => {
     if (bounties) {
       setAllBounties(bounties);
-      setPostedBounties(
-        bounties.filter((bounty) => bounty.data.issuer === address)
-      );
-      // Assginned bounties is such where applications is an array of object which one of it includes object of hunter address
-      setAssignedBounties(
-        bounties.filter((bounty) =>
-          bounty.data.applications?.some(
-            (application) => application.hunter === address
-          )
-        )
-      );
     }
   }, [bounties]);
 
@@ -215,7 +198,7 @@ export default function Bounties() {
                   value !== null && setOrderSort(value);
                 }}
               >
-                {/* <Option value="application">Sort By Application</Option> */}
+                <Option value="application">Sort By Application</Option>
                 <Option value="createdAt">Sort By Posting Date</Option>
                 <Option value="reward">Sort By Reward</Option>
               </Select>
@@ -252,11 +235,9 @@ export default function Bounties() {
               p: 0,
             }}
           >
-            {allBounties.length
-              ? bounties.map(({ data: bounty }, id) => (
-                  <BountyCard key={id} {...bounty} />
-                ))
-              : null}
+            {allBounties.map((bounty) => (
+              <BountyCard key={bounty} address={bounty} />
+            ))}
           </TabPanel>
           <TabPanel
             sx={{
@@ -264,28 +245,28 @@ export default function Bounties() {
             }}
             value="2"
           >
-            {postedBounties.length ? (
+            {/* {postedBounties.length ? (
               postedBounties.map(({ data: bounty }, id) => (
                 <BountyCard key={id} {...bounty} />
               ))
-            ) : (
-              <Box
-                sx={{
-                  border: "1px dashed #70788c50",
-                  width: ["100%", "100%", "fit-content"],
-                  mx: "auto",
-                  my: "2em",
-                  px: [3, 3, 6],
-                  py: 4,
-                  borderRadius: "5px",
-                  textAlign: "center",
-                }}
-              >
-                <Typography variant="body1">
-                  You haven&apos;t posted any Bounties yet.
-                </Typography>
-              </Box>
-            )}
+            ) : ( */}
+            <Box
+              sx={{
+                border: "1px dashed #70788c50",
+                width: ["100%", "100%", "fit-content"],
+                mx: "auto",
+                my: "2em",
+                px: [3, 3, 6],
+                py: 4,
+                borderRadius: "5px",
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="body1">
+                You haven&apos;t posted any Bounties yet.
+              </Typography>
+            </Box>
+            {/* )} */}
           </TabPanel>
           <TabPanel
             sx={{
@@ -293,28 +274,28 @@ export default function Bounties() {
             }}
             value="3"
           >
-            {assignedBounties.length ? (
+            {/* {assignedBounties.length ? (
               assignedBounties.map(({ data: bounty }, id) => (
                 <BountyCard key={id} {...bounty} />
               ))
-            ) : (
-              <Box
-                sx={{
-                  border: "1px dashed #70788c50",
-                  width: ["100%", "100%", "fit-content"],
-                  mx: "auto",
-                  my: "2em",
-                  px: [3, 3, 6],
-                  py: 4,
-                  borderRadius: "5px",
-                  textAlign: "center",
-                }}
-              >
-                <Typography variant="body1">
-                  You aren&apos;t working on any Bounties yet.
-                </Typography>
-              </Box>
-            )}
+            ) : ( */}
+            <Box
+              sx={{
+                border: "1px dashed #70788c50",
+                width: ["100%", "100%", "fit-content"],
+                mx: "auto",
+                my: "2em",
+                px: [3, 3, 6],
+                py: 4,
+                borderRadius: "5px",
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="body1">
+                You aren&apos;t working on any Bounties yet.
+              </Typography>
+            </Box>
+            {/* )} */}
           </TabPanel>
         </TabContext>
       </Box>

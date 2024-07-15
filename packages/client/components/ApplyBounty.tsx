@@ -15,6 +15,7 @@ import { GrCheckmark } from "react-icons/gr";
 import { Bounty, BountyApplication } from "@/types";
 import { useAppContext } from "@/context/AppContext";
 import { handleUpload } from "@/functions";
+import { useBountyHandler } from "@/hooks/useBountyHandler";
 
 const { format } = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,19 +23,20 @@ const { format } = new Intl.NumberFormat("en-US", {
 });
 
 interface ApplyBountyProps extends Bounty {
-  bountyId: string;
+  bountyId: `0x${string}`;
   refetchBounty: () => void;
 }
 
 export default function ApplyBounty(bounty: ApplyBountyProps) {
   let { reward, communication, applications } = bounty;
-  const { address, applyToBounty } = useAppContext();
+  const { address } = useAppContext();
   const [open, setOpen] = React.useState<boolean>(false);
   const [hasAppliedToBounty, setHasAppliedToBounty] = React.useState(false);
+  const { applyToBounty } = useBountyHandler(bounty.bountyId);
 
   React.useEffect(() => {
     setHasAppliedToBounty(
-      applications?.some((item) => item.hunter === address) || false
+      applications?.some((application) => application.applicant === address) || false
     );
   }, [applications, address]);
 
@@ -77,20 +79,9 @@ export default function ApplyBounty(bounty: ApplyBountyProps) {
 
                 try {
                   setSubmitting(true);
-                  let bountyApplicationData: BountyApplication = {
-                    hunter: address!,
-                    status: "open",
-                    timestamp: Date.now(),
-                    applicationMessage: applicationMessageIPFSHash.toString(),
-                    communication: {
-                      method: communication.method,
-                      value: values.communicationMethod.value,
-                    },
-                  };
                   await applyToBounty(
-                    bounty.bountyId,
-                    bountyApplicationData,
-                    bounty.txId
+                    applicationMessageIPFSHash.toString(),
+                    values.communicationMethod.value
                   );
                   setOpen(false);
                   resetForm();

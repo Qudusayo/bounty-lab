@@ -44,7 +44,7 @@ module.exports = {
         },
     },
     solidity: {
-        version: "0.8.19",
+        version: "0.8.20",
     },
     /**
      * Named Accounts become available as variable names in scripts

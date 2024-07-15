@@ -14,7 +14,7 @@ export default function ShareModal({
   reward,
 }: {
   title: string;
-  reward: number;
+  reward: string;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const router = useRouter();

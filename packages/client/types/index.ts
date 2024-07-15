@@ -1,12 +1,10 @@
 type BountyApplication = {
-  hunter: `0x${string}`;
-  status: "open" | "accepted" | "rejected";
-  timestamp: number;
-  applicationMessage: string;
-  communication: {
-    method: "email" | "discord";
-    value: string;
-  };
+  applicant: `0x${string}`;
+  applicationDate: number;
+  applicationText: string;
+  communicationValue: string;
+  isAccepted: boolean;
+  isRejected: boolean;
 };
 
 type SubmissionLog = {
@@ -17,9 +15,7 @@ type SubmissionLog = {
 };
 
 type Bounty = {
-  title: string;
-  descriptionMeta: string;
-  descriptionIPFSHash: string;
+  bountyMeta: string;
   reward: number;
   deadline: number;
   hunter: `0x${string}` | null;
@@ -32,7 +28,6 @@ type Bounty = {
   createdAt: number;
   updatedAt?: number;
   applications?: BountyApplication[];
-  txId: string;
   submissionLink?: string;
   submissions?: SubmissionLog[];
   submissionFeedback?: string;
@@ -43,7 +38,7 @@ type NullableValue<T> = T | undefined;
 
 interface IBountyContextProps {
   address: `0x${string}` | undefined;
-  bounties: { data: Bounty; id: string }[];
+  bounties: `0x${string}`[];
   statusSort: "" | "open" | "in progress" | "completed" | "cancelled";
   setStatusSort: React.Dispatch<
     React.SetStateAction<
@@ -52,11 +47,11 @@ interface IBountyContextProps {
   >;
   orderSort: "createdAt" | "reward";
   setOrderSort: React.Dispatch<React.SetStateAction<"createdAt" | "reward">>;
-  acceptApplication: (id: string, hunter: `0x${string}`) => Promise<unknown>;
-  declineApplicantion: (id: string, hunter: `0x${string}`) => Promise<unknown>;
-  fetchBounty: (id: string) => Promise<Bounty>;
+  // fetchBounty: (id: string) => Promise<Bounty>;
   fetchBounties: () => void;
-  createBounty: (bountyData: Bounty) => Promise<unknown>;
+  createBounty: (
+    bountyData: Omit<Bounty, "issuer" | "hunter" | "status">
+  ) => Promise<unknown>;
   cancelBounty: (id: string) => Promise<unknown>;
   updateBounty: (id: string, bounty: Bounty) => Promise<unknown>;
   applyToBounty: (
@@ -69,7 +64,6 @@ interface IBountyContextProps {
     submissionLink: string,
     message?: string
   ) => Promise<unknown>;
-  accpetSubmission: (id: string) => Promise<unknown>;
   abandonBounty: (id: string) => Promise<unknown>;
   requestChanges: (id: string, message: string) => Promise<unknown>;
 }

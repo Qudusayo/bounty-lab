@@ -7,9 +7,9 @@ const CreateBountyValidationSchema = Yup.object().shape({
   ),
   description: Yup.string().required("Description is required"),
   amount: Yup.number()
-    .required("Minimum bounty of 5 cUSD")
-    .min(5, "Minimum bounty of 5 cUSD")
-    .typeError("Minimum bounty of 5 cUSD"),
+    .required("Minimum bounty of 1 cUSD")
+    .min(1, "Minimum bounty of 1 cUSD")
+    .typeError("Minimum bounty of 1 cUSD"),
   communicationMethod: Yup.object().shape({
     type: Yup.mixed()
       .oneOf(["email", "discord"])

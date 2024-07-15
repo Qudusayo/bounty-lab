@@ -7,21 +7,23 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import { BsCheck2 } from "react-icons/bs";
 import { shortenAddress } from "@/functions";
-import { useAppContext } from "@/context/AppContext";
+import { useBountyHandler } from "@/hooks/useBountyHandler";
+import { useBountyDetail } from "@/hooks/useBountyDetail";
 
 export default function AcceptSubmission({
   bountyId,
   refetchBounty,
   hunter,
 }: {
-  bountyId: string;
+  bountyId: `0x${string}`;
   refetchBounty: () => void;
   hunter: `0x${string}`;
 }) {
   const [open, setOpen] = React.useState<boolean>(false);
   const [acceptingSubmission, setAcceptingSubmission] =
     React.useState<boolean>(false);
-  const { accpetSubmission } = useAppContext();
+  const { acceptSubmission } = useBountyHandler(bountyId);
+  const { refreshBountyData } = useBountyDetail(bountyId);
 
   return (
     <React.Fragment>
@@ -73,8 +75,8 @@ export default function AcceptSubmission({
               onClick={async () => {
                 setAcceptingSubmission(true);
                 try {
-                  await accpetSubmission(bountyId);
-                  refetchBounty();
+                  await acceptSubmission();
+                  refreshBountyData();
                 } catch (error) {
                 } finally {
                   setAcceptingSubmission(false);

@@ -10,22 +10,30 @@ import { formatTimestamp, shortenAddress } from "@/functions";
 import Avatar from "@/utils/Avatar";
 import { IoMdCheckmark, IoMdClose } from "react-icons/io";
 import { useAppContext } from "@/context/AppContext";
+import { useBountyDetail } from "@/hooks/useBountyDetail";
+import { useBountyHandler } from "@/hooks/useBountyHandler";
 
 interface ApplicationCardProps extends BountyApplication {
-  bountyId: string;
+  bountyId: `0x${string}`;
   issuer: `0x${string}`;
   refetch: () => void;
+  isOpenBounty: boolean;
   acceptedHunter: `0x${string}` | null;
+  index: number;
 }
 
 export default function ApplicationCard(application: ApplicationCardProps) {
   const { mode } = useColorScheme();
-  const { address, acceptApplication, declineApplicantion } = useAppContext();
+  const { address } = useAppContext();
   const [common, setCommon] = useState("#ffffff");
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isCreator, setIsCreator] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [declining, setDeclining] = useState(false);
+  const { refreshBountyData } = useBountyDetail(application.bountyId);
+  const { acceptApplication, rejectApplication } = useBountyHandler(
+    application.bountyId
+  );
 
   useEffect(() => {
     setIsCreator(application.issuer === address);
@@ -33,13 +41,17 @@ export default function ApplicationCard(application: ApplicationCardProps) {
 
   useEffect(() => {
     const fetchApplicationMessage = async () => {
-      const { data } = await axios.get(
-        `https://ipfs.io/ipfs/${application.applicationMessage}`
-      );
-      setApplicationMessage(data);
+      try {
+        const { data } = await axios.get(
+          `https://ipfs.io/ipfs/${application.applicationText}`
+        );
+        setApplicationMessage(data);
+      } catch (error) {
+        console.log("Error fetching application message", error);
+      }
     };
     fetchApplicationMessage();
-  }, [application.applicationMessage]);
+  }, [application.applicationText]);
 
   useEffect(() => {
     if (mode === "light") {
@@ -49,16 +61,15 @@ export default function ApplicationCard(application: ApplicationCardProps) {
     }
   }, [mode]);
 
-  const acceptApplicant = async (address: `0x${string}`) => {
+  const acceptApplicant = async () => {
     setAccepting(true);
-    await acceptApplication(application.bountyId, address);
-    application.refetch();
+    await acceptApplication(application.index, refreshBountyData);
     setAccepting(false);
   };
 
-  const declineApplicant = async (address: `0x${string}`) => {
+  const declineApplicant = async () => {
     setDeclining(true);
-    await declineApplicantion(application.bountyId, address);
+    await rejectApplication(application.index, refreshBountyData);
     application.refetch();
     setDeclining(false);
   };
@@ -73,12 +84,12 @@ export default function ApplicationCard(application: ApplicationCardProps) {
         >
           <Box display={"flex"} alignItems={"center"} gap={".5rem"} my={3}>
             <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-              <Avatar address={application.hunter} />
+              <Avatar address={application.applicant} />
               <Typography level="body-sm">
-                {shortenAddress(application.hunter)}
+                {shortenAddress(application.applicant)}
               </Typography>
             </Box>
-            {application.acceptedHunter === application.hunter && (
+            {application.isAccepted && (
               <Chip
                 startDecorator={<IoMdCheckmark />}
                 size="sm"
@@ -87,40 +98,38 @@ export default function ApplicationCard(application: ApplicationCardProps) {
                 Accepted
               </Chip>
             )}
-            {application.status === "rejected" && (
+            {application.isRejected && (
               <Chip startDecorator={<IoMdCheckmark />} size="sm" color="danger">
                 Rejected
               </Chip>
             )}
           </Box>
-          {isCreator &&
-            !application.acceptedHunter &&
-            application.status !== "rejected" && (
-              <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-                <Button
-                  variant="soft"
-                  color="danger"
-                  onClick={() => declineApplicant(application.hunter)}
-                  loading={declining}
-                  disabled={declining}
-                >
-                  <IoMdClose size={20} color="#000z" />
-                </Button>
-                <Button
-                  variant="solid"
-                  color="primary"
-                  startDecorator={<IoMdCheckmark />}
-                  onClick={() => acceptApplicant(application.hunter)}
-                  loading={accepting}
-                  disabled={accepting}
-                >
-                  Accept Application
-                </Button>
-              </Box>
-            )}
+          {isCreator && application.isOpenBounty && !application.isRejected && (
+            <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
+              <Button
+                variant="soft"
+                color="danger"
+                onClick={declineApplicant}
+                loading={declining}
+                disabled={declining}
+              >
+                <IoMdClose size={20} color="#000z" />
+              </Button>
+              <Button
+                variant="solid"
+                color="primary"
+                startDecorator={<IoMdCheckmark />}
+                onClick={acceptApplicant}
+                loading={accepting}
+                disabled={accepting}
+              >
+                Accept Application
+              </Button>
+            </Box>
+          )}
         </Box>
         <Typography>
-          Applied {formatTimestamp(application.timestamp)}
+          Applied {formatTimestamp(Number(application.applicationDate) * 1000)}
         </Typography>
       </Box>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>

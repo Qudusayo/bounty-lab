@@ -25,7 +25,7 @@ import ApplyBounty from "@/components/ApplyBounty";
 import Link from "next/link";
 import { IoArrowBack } from "react-icons/io5";
 import type { InferGetServerSidePropsType, GetServerSideProps } from "next";
-import { Bounty as IBounty } from "@/types";
+import { BountyApplication, Bounty as IBounty } from "@/types";
 import axios from "axios";
 import { formatTimestamp, shortenAddress } from "@/functions";
 import Avatar from "@/utils/Avatar";
@@ -49,23 +49,47 @@ import AbandonBounty from "@/components/AbandonBounty";
 import CancelBounty from "@/components/CancelBounty";
 import RequestChages from "@/components/RequestChanges";
 import ShareModal from "@/components/ShareModal";
+import { useBountyDetail } from "@/hooks/useBountyDetail";
+import { useAccount } from "wagmi";
 
 export default function Bounty({
   bounty: _bounty,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  let { id: bountyId } = _bounty;
   const { mode } = useJoyColorScheme();
-  const [bounty, setBounty] = useState(_bounty.data);
+  const { address } = useAccount();
+  // const [bounty, setBounty] = useState(_bounty.data);
   const [value, setValue] = useState("1");
-  const { address, fetchBounty } = useAppContext();
-  const [isHunter, setIsHunter] = useState(false);
-  const [isCreator, setIsCreator] = useState(false);
-  const [isOpenBounty, setIsOpenBounty] = useState(false);
-  const [isCompletedBounty, setIsCompletedBounty] = useState(false);
+  // const { address, fetchBounty } = useAppContext();
+  // const [isHunter, setIsHunter] = useState(false);
+  // const [isCreator, setIsCreator] = useState(false);
+  // const [isOpenBounty, setIsOpenBounty] = useState(false);
+  // const [isCompletedBounty, setIsCompletedBounty] = useState(false);
   const [common, setCommon] = useState("#ffffff");
-  const [bountyDescription, setBountyDescription] = useState<string | null>(
-    null
-  );
+  // const [bountyDescription, setBountyDescription] = useState<string | null>(
+  //   null
+  // );
+
+  const {
+    bountyMeta,
+    reward,
+    deadline,
+    creator,
+    status,
+    createdAt,
+    acceptedApplicant,
+    applicants,
+    communicationValue,
+    communicationMethod,
+    applications,
+    isSubmitted,
+    isRequestChange,
+    refreshBountyData,
+  } = useBountyDetail(_bounty.address);
+
+  const isCreator = address === creator;
+  const isOpenBounty = status === "open";
+  const isCompletedBounty = status === "completed";
+  const isHunter = address === acceptedApplicant;
 
   const handleChange = (_: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -84,28 +108,22 @@ export default function Bounty({
     }
   }, [mode]);
 
-  useEffect(() => {
-    setIsHunter(address === bounty.hunter);
-    setIsCreator(address === bounty.issuer);
-    setIsOpenBounty(bounty.status === "open");
-    setIsCompletedBounty(bounty.status === "completed");
-  }, [address, bounty]);
+  // useEffect(() => {
+  //   setIsHunter(address === bounty.hunter);
+  //   setIsCreator(address === bounty.issuer);
+  //   setIsOpenBounty(bounty.status === "open");
+  //   setIsCompletedBounty(bounty.status === "completed");
+  // }, [address, bounty]);
 
-  useEffect(() => {
-    const fetchBountyDescription = async () => {
-      const { data } = await axios.get(
-        `https://ipfs.io/ipfs/${bounty.descriptionIPFSHash}`
-      );
-      setBountyDescription(data);
-    };
-    fetchBountyDescription();
-  });
-
-  const refetchBounty = async (backToDetails?: boolean) => {
-    let bountyData = await fetchBounty(bountyId);
-    if (backToDetails) setValue("1");
-    setBounty(bountyData);
-  };
+  // useEffect(() => {
+  //   const fetchBountyDescription = async () => {
+  //     const { data } = await axios.get(
+  //       `https://ipfs.io/ipfs/${bounty.descriptionIPFSHash}`
+  //     );
+  //     setBountyDescription(data);
+  //   };
+  //   fetchBountyDescription();
+  // });
 
   return (
     <Container>
@@ -145,7 +163,7 @@ export default function Bounty({
           flexDirection={["column", "column", "row"]}
         >
           <Typography level="h2" color="success">
-            Earn {format(bounty.reward)}
+            Earn {format(reward ? Number(reward) / 10 ** 18 : 0)}
           </Typography>
           <Box
             sx={{
@@ -155,16 +173,16 @@ export default function Bounty({
           >
             <LuClock4 />
             <Typography level="body-sm" sx={{ ml: 1 }}>
-              due {formatTimestamp(bounty.deadline)}
+              due {formatTimestamp(deadline ? Number(deadline) : 0)}
             </Typography>
             <BsDot size={20} />
-            <Chip size="sm" color={ChipData[bounty.status].color as any}>
-              {ChipData[bounty.status].status}
+            <Chip size="sm" color={ChipData[status].color as any}>
+              {ChipData[status].status}
             </Chip>
           </Box>
         </Box>
         <Typography level="h3" my={".75em"}>
-          {bounty.title}
+          {bountyMeta.title}
         </Typography>
         <Box
           display={"flex"}
@@ -175,25 +193,34 @@ export default function Bounty({
           gap={2}
         >
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-            <Avatar address={bounty.issuer} />
+            <Avatar address={creator as string} />
             <Typography level="body-sm">
-              {shortenAddress(bounty.issuer)}
+              {shortenAddress(creator as string)}
             </Typography>
             <BsDot size={20} />
             <Typography level="body-sm">
-              Posted {formatTimestamp(bounty.createdAt)}
+              Posted{" "}
+              {formatTimestamp(
+                createdAt ? Number(createdAt) * 1000 : Date.now()
+              )}
             </Typography>
           </Box>
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-            <ShareModal title={bounty.title} reward={bounty.reward} />
+            <ShareModal
+              title={bountyMeta.title}
+              reward={format(Number(reward ? Number(reward) / 10 ** 18 : 0))}
+            />
             {isHunter && (
               <AbandonBounty
-                refetchBounty={refetchBounty}
-                bountyId={bountyId}
+                refetchBounty={refreshBountyData}
+                bountyId={_bounty.address}
               />
             )}
             {isCreator && isOpenBounty && (
-              <CancelBounty refetchBounty={refetchBounty} bountyId={bountyId} />
+              <CancelBounty
+                refetchBounty={refreshBountyData}
+                bountyId={_bounty.address}
+              />
             )}
             {isCreator ? (
               isOpenBounty && (
@@ -210,14 +237,30 @@ export default function Bounty({
               )
             ) : isOpenBounty ? (
               <ApplyBounty
-                refetchBounty={refetchBounty}
-                bountyId={bountyId}
-                {...bounty}
+                refetchBounty={refreshBountyData}
+                bountyId={_bounty.address}
+                bountyMeta={_bounty.address}
+                communication={{
+                  method: communicationMethod as "email" | "discord",
+                  value: communicationValue as string,
+                }}
+                createdAt={createdAt as number}
+                deadline={deadline as number}
+                hunter={acceptedApplicant as `0x${string}`}
+                issuer={creator as `0x${string}`}
+                reward={Number(reward) / 10 ** 18}
+                status={
+                  status as "open" | "in progress" | "completed" | "cancelled"
+                }
+                applications={applications as []}
               />
             ) : (
               isHunter &&
               !isCompletedBounty && (
-                <SubmitWork refetchBounty={refetchBounty} bountyId={bountyId} />
+                <SubmitWork
+                  refetchBounty={refreshBountyData}
+                  bountyId={_bounty.address}
+                />
               )
             )}
           </Box>
@@ -295,7 +338,7 @@ export default function Bounty({
                         backgroundColor: common,
                       }}
                     >
-                      {bounty?.applications?.length ?? 0}
+                      {applicants ?? 0}
                     </Chip>
                   </Box>
                 }
@@ -333,7 +376,7 @@ export default function Bounty({
               p: 0,
             }}
           >
-            {bounty.status === "completed" && (
+            {status === "completed" && (
               <Box
                 sx={{
                   backgroundColor: common,
@@ -351,10 +394,10 @@ export default function Bounty({
             <Typography level="h4" my={3}>
               Bounty Description
             </Typography>
-            {bountyDescription ? (
+            {bountyMeta.description ? (
               <Box px={3} py={1} borderRadius={12} bgcolor={common}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {bountyDescription.replace(/^(.*)$/gm, "$1  ")}
+                  {bountyMeta.description.replace(/^(.*)$/gm, "$1  ")}
                 </ReactMarkdown>
               </Box>
             ) : (
@@ -379,7 +422,7 @@ export default function Bounty({
             <Typography level="h4" my={3}>
               Applications
             </Typography>
-            {!bounty.applications?.length && (
+            {!applicants && (
               <Box
                 sx={{
                   backgroundColor: common,
@@ -390,14 +433,21 @@ export default function Bounty({
                 No applications.
               </Box>
             )}
-            {bounty.applications?.map((application, i) => (
+            {(applications as BountyApplication[])?.map((application, i) => (
               <ApplicationCard
                 key={i}
-                {...application}
-                bountyId={bountyId}
-                refetch={refetchBounty}
-                issuer={bounty.issuer}
-                acceptedHunter={bounty.hunter}
+                isOpenBounty={isOpenBounty}
+                bountyId={_bounty.address}
+                refetch={refreshBountyData}
+                issuer={creator as `0x${string}`}
+                acceptedHunter={acceptedApplicant as `0x${string}`}
+                applicant={application.applicant as `0x${string}`}
+                applicationDate={application.applicationDate as number}
+                applicationText={application.applicationText as string}
+                communicationValue={application.communicationValue as string}
+                isAccepted={application.isAccepted as boolean}
+                isRejected={application.isRejected as boolean}
+                index={i}
               />
             ))}
           </TabPanel>
@@ -407,19 +457,17 @@ export default function Bounty({
             }}
             value="3"
           >
-            {bounty.submissionStatus === "submitted" && (
+            {!!isSubmitted && (
               <Box
                 sx={{
                   backgroundColor: common,
                   p: 3,
                   borderRadius: 6,
                   mb: 2,
-                  border:
-                    bounty.status === "completed" ? "1px solid #00A11B" : "",
-                  boxShadow:
-                    bounty.status === "completed"
-                      ? "rgba(0, 161, 27, 0.4) 0px 0px 8px"
-                      : "",
+                  border: isCompletedBounty ? "1px solid #00A11B" : "",
+                  boxShadow: isCompletedBounty
+                    ? "rgba(0, 161, 27, 0.4) 0px 0px 8px"
+                    : "",
                 }}
               >
                 <Box
@@ -430,9 +478,10 @@ export default function Bounty({
                   }}
                 >
                   <Typography fontWeight={"600"}>
-                    {shortenAddress(bounty.hunter ?? "")} submitted work!
+                    {shortenAddress((acceptedApplicant as string) ?? "")}{" "}
+                    submitted work!
                   </Typography>
-                  <MuiLink
+                  {/* <MuiLink
                     rel="noopener"
                     href={bounty.submissionLink}
                     target="_blank"
@@ -452,77 +501,71 @@ export default function Bounty({
                     }}
                   >
                     View Work
-                  </MuiLink>
+                  </MuiLink> */}
                 </Box>
 
-                {isCreator &&
-                  bounty.hunter &&
-                  bounty.status !== "completed" && (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                        gap: 1.5,
-                        mt: 4,
-                      }}
-                    >
-                      <RequestChages
-                        bountyId={bountyId}
-                        refetchBounty={refetchBounty}
-                      />
-                      <AcceptSubmission
-                        bountyId={bountyId}
-                        hunter={bounty.hunter}
-                        refetchBounty={refetchBounty}
-                      />
-                    </Box>
-                  )}
-              </Box>
-            )}
-            {bounty.submissionStatus === "reviewed" ||
-              (!bounty.submissionStatus &&
-                isHunter &&
-                bounty.status !== "completed" && (
+                {isCreator && !!acceptedApplicant && !isCompletedBounty && (
                   <Box
                     sx={{
-                      backgroundColor: common,
-                      p: 3,
-                      borderRadius: 6,
-                      mb: 2,
-                      border:
-                        bounty.submissionStatus === "reviewed"
-                          ? "1px solid #a19600"
-                          : "",
-                      boxShadow:
-                        bounty.submissionStatus === "reviewed"
-                          ? "rgba(161, 118, 0, 0.4) 0px 0px 8px"
-                          : "",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      gap: 1.5,
+                      mt: 4,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Typography fontWeight={"600"}>
-                        {isCreator
-                          ? "You"
-                          : shortenAddress(bounty.hunter ?? "")}{" "}
-                        request some changes!
-                      </Typography>
-                      {!isCreator && (
-                        <SubmitWork
-                          refetchBounty={refetchBounty}
-                          bountyId={bountyId}
-                        />
-                      )}
-                    </Box>
-                    <Typography>{bounty.submissionFeedback}</Typography>
+                    <RequestChages
+                      bountyId={_bounty.address}
+                      refetchBounty={refreshBountyData}
+                    />
+                    <AcceptSubmission
+                      bountyId={_bounty.address}
+                      hunter={acceptedApplicant as `0x${string}`}
+                      refetchBounty={refreshBountyData}
+                    />
                   </Box>
-                ))}
+                )}
+              </Box>
+            )}
+            {!!isRequestChange ||
+              (!!isSubmitted && isHunter && !isCompletedBounty && (
+                <Box
+                  sx={{
+                    backgroundColor: common,
+                    p: 3,
+                    borderRadius: 6,
+                    mb: 2,
+                    border: !!isRequestChange ? "1px solid #a19600" : "",
+                    boxShadow: !!isRequestChange
+                      ? "rgba(161, 118, 0, 0.4) 0px 0px 8px"
+                      : "",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography fontWeight={"600"}>
+                      {isCreator
+                        ? "You"
+                        : shortenAddress(
+                            (acceptedApplicant as string) ?? ""
+                          )}{" "}
+                      request some changes!
+                    </Typography>
+                    {!isCreator && (
+                      <SubmitWork
+                        refetchBounty={refreshBountyData}
+                        bountyId={_bounty.address}
+                      />
+                    )}
+                  </Box>
+                  {/* <Typography>{bounty.submissionFeedback}</Typography> */}
+                </Box>
+              ))}
             <Grid container spacing={2} sx={{ flexGrow: 1 }}>
               <Grid xs={6}>
                 <Box
@@ -545,17 +588,17 @@ export default function Bounty({
                       my: 1,
                     }}
                   >
-                    {bounty.communication.method === "discord" ? (
+                    {communicationMethod === "discord" ? (
                       <BsDiscord size={20} />
                     ) : (
                       <BsFillEnvelopeFill size={20} />
                     )}
-                    <Typography>{bounty.communication.value}</Typography>
+                    <Typography>{communicationValue as string}</Typography>
                   </Box>
                   <Typography level="body-sm" sx={{ mt: 2 }}>
                     Bounty Hunter
                   </Typography>
-                  {bounty.hunter ? (
+                  {acceptedApplicant ? (
                     <Box
                       sx={{
                         display: "flex",
@@ -564,17 +607,17 @@ export default function Bounty({
                         my: 1,
                       }}
                     >
-                      {bounty.communication.method === "discord" ? (
+                      {communicationMethod === "discord" ? (
                         <BsDiscord size={20} />
                       ) : (
                         <BsFillEnvelopeFill size={20} />
                       )}
                       <Typography>
                         {
-                          bounty.applications?.find(
+                          (applications as BountyApplication[])?.find(
                             (application) =>
-                              application.hunter === bounty.hunter
-                          )?.communication.value
+                              application.applicant === acceptedApplicant
+                          )?.communicationValue
                         }
                       </Typography>
                     </Box>
@@ -606,7 +649,7 @@ export default function Bounty({
               }}
             >
               <Typography fontWeight={"600"}>Activity Log</Typography>
-              {bounty.submissions && bounty.submissions.length
+              {/* {bounty.submissions && bounty.submissions.length
                 ? bounty.submissions.map((log, i) => (
                     <Box key={i}>
                       <Box
@@ -648,7 +691,7 @@ export default function Bounty({
                       </Box>
                     </Box>
                   ))
-                : null}
+                : null} */}
             </Box>
           </TabPanel>
         </TabContext>
@@ -657,64 +700,15 @@ export default function Bounty({
   );
 }
 
-// export const getServerSideProps: GetServerSideProps<{
-//   bounty: { data: IBounty; id: string };
-// }> = async (context) => {
-//   try {
-//     const { id } = context.query;
-
-//     const req = await axios.get(`${process.env.SERVER_URL}/bounties/${id}`);
-//     let bounty = req.data;
-
-//     if (req.status !== 200) {
-//       return {
-//         redirect: {
-//           destination: "/404",
-//           permanent: false,
-//         },
-//       };
-//     }
-
-//     return { props: { bounty } };
-//   } catch (error) {
-//     return {
-//       redirect: {
-//         destination: "/404",
-//         permanent: false,
-//       },
-//     };
-//   }
-// };
-
 export const getServerSideProps: GetServerSideProps<{
-  bounty: { data: IBounty; id: string };
+  bounty: { address: `0x${string}` };
 }> = async (context) => {
   const { id } = context.query;
-
-  const db = new WeaveDB({
-    contractTxId: process.env.NEXT_PUBLIC_WEAVEDB_ContractTxId,
-  });
-  await db.init();
-  let bounties: Promise<{ data: IBounty; id: string }[]> = await db.cget(
-    "bounties",
-    ["txId", "==", id]
-  );
-  if (!(await bounties).length) {
-    return {
-      redirect: {
-        destination: "/404",
-        permanent: false,
-      },
-    };
-  }
-
-  let bounty = (await bounties)[0];
 
   return {
     props: {
       bounty: {
-        data: bounty.data,
-        id: bounty.id,
+        address: id as `0x${string}`,
       },
     },
   };

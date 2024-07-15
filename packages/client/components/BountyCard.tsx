@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Typography, Link as MuiLink, Card } from "@mui/joy";
 import { LuClock4 } from "react-icons/lu";
 import Chip from "@mui/joy/Chip";
 import { BsDot } from "react-icons/bs";
 import { BsPerson } from "react-icons/bs";
 import Link from "next/link";
-import { Bounty } from "@/types";
 import { formatTimestamp, shortenAddress } from "@/functions";
 import Avatar from "@/utils/Avatar";
+import { useBountyDetail } from "@/hooks/useBountyDetail";
 
 export const ChipData = {
   open: { color: "primary", status: "Open" },
@@ -16,34 +16,22 @@ export const ChipData = {
   cancelled: { color: "neutral", status: "Cancelled" },
 };
 
-export default function BountyCard({
-  txId,
-  status,
-  title,
-  reward,
-  applications,
-  descriptionMeta,
-  issuer,
-  hunter,
-  createdAt,
-  deadline,
-}: Pick<
-  Bounty,
-  | "txId"
-  | "status"
-  | "title"
-  | "reward"
-  | "applications"
-  | "descriptionMeta"
-  | "issuer"
-  | "hunter"
-  | "createdAt"
-  | "deadline"
->) {
+export default function BountyCard({ address }: { address: `0x${string}` }) {
   const { format } = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   });
+  const {
+    bountyMeta,
+    reward,
+    deadline,
+    creator,
+    status,
+    createdAt,
+    acceptedApplicant,
+    applicants,
+    shortDescription,
+  } = useBountyDetail(address);
 
   return (
     <Card
@@ -71,7 +59,7 @@ export default function BountyCard({
         flexDirection={["column", "column", "row"]}
       >
         <Typography level="h4" color="success">
-          US{format(reward)}
+          US{format(reward ? Number(reward) / 10 ** 18 : 0)}
         </Typography>
         <Box
           sx={{
@@ -82,7 +70,7 @@ export default function BountyCard({
         >
           <LuClock4 />
           <Typography level="body-sm">
-            due {formatTimestamp(deadline)}
+            due {formatTimestamp(deadline ? Number(deadline) : 0)}
           </Typography>
           <BsDot size={20} />
           <Chip size="sm" color={ChipData[status].color as any}>
@@ -94,12 +82,12 @@ export default function BountyCard({
         <MuiLink
           component={Link}
           overlay
-          href={"/bounties/" + txId}
+          href={"/bounties/" + address}
           textColor="inherit"
           underline="none"
           fontWeight="md"
         >
-          {title}
+          {bountyMeta.title}
         </MuiLink>
       </Typography>
       <Typography
@@ -112,7 +100,7 @@ export default function BountyCard({
           textOverflow: "ellipsis",
         }}
       >
-        {descriptionMeta}
+        {shortDescription}
       </Typography>
       <Box
         display={"flex"}
@@ -123,33 +111,33 @@ export default function BountyCard({
         gap={2}
       >
         <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
-          <Avatar address={hunter ?? ""} />
+          <Avatar address={(acceptedApplicant as string) ?? ""} />
           <Box display={"flex"} alignItems={"center"}>
-            <Typography level="body-sm">{shortenAddress(issuer)}</Typography>
+            <Typography level="body-sm">
+              {shortenAddress((creator as string) ?? "")}
+            </Typography>
             <BsDot size={20} />
             <Typography level="body-sm">
-              {formatTimestamp(createdAt)}
+              {formatTimestamp(createdAt ? Number(createdAt) * 1000 : 0)}
             </Typography>
           </Box>
         </Box>
         {status === "in progress" || status === "completed" ? (
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
             <Typography level="body-sm">Claimed by</Typography>
-            <Avatar address={issuer} />
+            <Avatar address={(creator as string) ?? ""} />
             <Typography level="body-sm">
-              {shortenAddress(hunter || "")}
+              {shortenAddress((acceptedApplicant as string) || "")}
             </Typography>
           </Box>
         ) : (
           <Box display={"flex"} alignItems={"center"} gap={".5rem"}>
             <BsPerson size={20} />
             <Typography level="body-sm">
-              {applications
-                ? applications.length === 0
+              {applicants
+                ? applicants === 0
                   ? "No applicants yet"
-                  : `${applications?.length} applicant${
-                      applications.length > 1 ? "s" : ""
-                    }`
+                  : `${applicants} applicant${applicants > 1 ? "s" : ""}`
                 : "No applicants yet"}
               {}
             </Typography>
