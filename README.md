@@ -1,5 +1,5 @@
 <!-- TITLE -->
-![Solvre's Banner](./banner.png)
+![Bounty's Banner](./banner.png)
 
 <!-- TABLE OF CONTENTS -->
 
@@ -24,12 +24,12 @@
 
 <!-- ABOUT THE PROJECT -->
 ## Project Links
-[https://solvre.pro](https://solvre.pro)    
+[https://bwc-7.vercel.app](https://bwc-7.vercel.app)    
 
-[Pitch Deck - Youtube](https://youtu.be/Od6cIsAQRSM)
+[Demo](https://youtu.be/aZDpJOYxeZo)
 
 ## Pitch
-https://github.com/Qudusayo/bounty-lab/assets/51055890/c718631d-fe2f-4904-88fd-699efbf83751
+https://www.canva.com/design/DAFsEdwAmqQ/Yxdf1wDB5Jr983OMVoh76g/edit?utm_content=DAFsEdwAmqQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 
 ## Traditional Task Delegation Inefficiencies
 
@@ -53,32 +53,28 @@ In summary, the platform aims to revolutionize task delegation, foster a global 
 Imagine you're a backend developer wanting to build a nice portfolio site, let's assume css sucks for backend developers, You can simply get to the platform, uplos the instruction (Problem Description), Acceptance Criteria, Technical Details and Milestones, Attach a fee to it and post on the platform. There's a share button on the platform which you can use to grab the link to the bounty and share on your social media for outreach and also a share button to share on X (formally twitter). As expected, applicants are to be frontend developers and Interested applicants submitt application messages to prove to you they're the right choice. You can thereafter go through all submitted application messages, reject or ignore the ones you seemed not to be a good fit and accept the one that seemed to be the best fit, __Note__: accepting an applicant doesn't get the applicant paid. Thereafter the applicant gets to work on your task and submit as expected, when the submission is made, you can go through the submission. If the submission doesn't seemed to be good to your taste, you can surely request a review which the applicant would be notified and got to make fixes as mentioned. If the submission meets your expectation, you can thereafter accept the submission and the applicant gets paid immediately. **It's a win win for the two parties, You got your expected portfolio site running and the applicant gets rewarded in amount of cUSD you attached**.
 
 ## Key Takeaway and What Next
-- Solvre is a fully decentralized bounty platform with no web2 infastructure or middle man making it fully decentralized.
+- Bounty is a fully decentralized bounty platform with no web2 infastructure or middle man making it fully decentralized.
 - This will really help the community at large in a great way as it's a win-win platform for both bounty posters and applicants
 - Intend to build this further after the hackathon.
 
 ## Technologies Used
 
-Using Celo composer with Material UI and NextJS for the front-end, Bunzz Smart Contract Hub for the contract deployment and WeaveDB ( based on Warp Smart contract ), a smart contract based database.
+Using Celo composer with Material UI and NextJS for the front-end, IPFS to keep large data and Hash stored onchain.
 
 - [Celo](https://celo.org/)
 - [Next.js](https://nextjs.org/)
 - [Material UI](https://mui.com/)
 - [Rainbowkit-celo](https://github.com/celo-org/rainbowkit-celo)
 - [Celo Composer](https://github.com/celo-org/celo-composer)
-- [Bunzz](https://bunzz.dev/)
-- [WeaveDB](https://weavedb.dev/)
 - [IPFS](https://ipfs.tech/)
 
 Other
-- [Deployed Contract Address on Alfajores Explorer](https://alfajores.celoscan.io/address/0x7d1A41Ee53d84270893f1158Cb861DBB46aC1438)
-- [Bunzz Smart Contract Hub Template Created and used](https://app.bunzz.dev/module-templates/79c65e23-4a1e-4b5e-b300-0ad01cec68ff?version=1.0.0)
+- [Deployed Contract Address on Alfajores Explorer](https://alfajores.celoscan.io/address/0x962203284c5f32fd03b4388DCbe992941527824D)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## Problems Encountered
-Found it a bit technical using Bunzz being the first time using the platform,  but giving it some time and going through the documentation patiently, I see Bunzz platform as a bit straight forward to use following the proper steps to deploying a module and also a great plaform that fosters contribution through creating a contract that can be easily documented and used by others.
-
+Found it a bit technical using persisting data on chain and using the data from different contracts to be displayed on the client as they're residing in different contracts created by a factory contract.
 
 <!-- CONTACT -->
 ## Contact
